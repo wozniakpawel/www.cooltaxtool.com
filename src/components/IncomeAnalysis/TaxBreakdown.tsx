@@ -13,9 +13,20 @@ interface TaxBreakdownProps {
 
 const TaxBreakdown = (props: TaxBreakdownProps) => {
   const results = useMemo(() => calculateTaxes(props.inputs), [props.inputs]);
+  // Baseline without any pension, to show what the contributions actually cost vs gain
+  const noPensionBaseline = useMemo(
+    () => calculateTaxes({ ...props.inputs, pensionEnabled: false }),
+    [props.inputs]
+  );
   const [period, setPeriod] = useState<'annual' | 'monthly' | 'weekly' | 'daily'>('annual');
   const divisors = { annual: 1, monthly: 12, weekly: 52, daily: 365 };
   const divisor = divisors[period];
+
+  const takeHomeGivenUp = noPensionBaseline.takeHomePay - results.takeHomePay;
+  const pensionGained = results.pensionPot.total;
+  const taxSaved = noPensionBaseline.combinedTaxes - results.combinedTaxes;
+  const effectiveBoost = pensionGained - takeHomeGivenUp;
+  const employerMoney = effectiveBoost - taxSaved;
 
   function renderSingleValue(name: ReactNode, value: number) {
     return (
@@ -102,6 +113,21 @@ const TaxBreakdown = (props: TaxBreakdownProps) => {
             {results.childBenefits.total > 0 && renderBreakDown(<>Child Benefits <InfoPopover {...explanations.result_childBenefits} /></>, results.childBenefits)}
           </tbody>
         </Table>
+
+        {props.inputs.pensionEnabled && pensionGained > 0 && (
+          <Alert variant="info" className="small">
+            <strong>Pension savings summary.</strong>{' '}
+            You give up {formatCurrencyPrecise(takeHomeGivenUp / divisor)} of take-home pay and
+            gain {formatCurrencyPrecise(pensionGained / divisor)} in your pension pot
+            {effectiveBoost > 0.005 ? (
+              <>
+                {' '}— {formatCurrencyPrecise(effectiveBoost / divisor)} more than it cost you,
+                thanks to {formatCurrencyPrecise(taxSaved / divisor)} saved in tax, NI and student loan
+                {employerMoney > 0.005 ? ' plus employer contributions and pension tax relief' : ''}.
+              </>
+            ) : '.'}
+          </Alert>
+        )}
 
         {results.pensionAnnualAllowance.exceeded && (
           <Alert variant="warning" className="small">
