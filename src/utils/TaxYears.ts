@@ -7,6 +7,7 @@ export const taxYears: TaxYearsData = {
             additionalChildRate: 17.25,
         },
         hicbc: { threshold: 60000, taperDivisor: 200 },
+        qualifyingEarnings: { lower: 6240, upper: 50270 },
         taxAllowance: {
             basicAllowance: 12570,
             taperThreshold: 100000,
@@ -53,6 +54,7 @@ export const taxYears: TaxYearsData = {
             additionalChildRate: 16.95,
         },
         hicbc: { threshold: 60000, taperDivisor: 200 },
+        qualifyingEarnings: { lower: 6240, upper: 50270 },
         taxAllowance: {
             basicAllowance: 12570,
             taperThreshold: 100000,
@@ -99,6 +101,7 @@ export const taxYears: TaxYearsData = {
             additionalChildRate: 15.90,
         },
         hicbc: { threshold: 50000, taperDivisor: 100 },
+        qualifyingEarnings: { lower: 6240, upper: 50270 },
         taxAllowance: {
             basicAllowance: 12570,
             taperThreshold: 100000,
@@ -144,6 +147,7 @@ export const taxYears: TaxYearsData = {
             additionalChildRate: 14.45,
         },
         hicbc: { threshold: 50000, taperDivisor: 100 },
+        qualifyingEarnings: { lower: 6240, upper: 50270 },
         taxAllowance: {
             basicAllowance: 12570,
             taperThreshold: 100000,
@@ -190,6 +194,7 @@ export const taxYears: TaxYearsData = {
             additionalChildRate: 14.00,
         },
         hicbc: { threshold: 50000, taperDivisor: 100 },
+        qualifyingEarnings: { lower: 6240, upper: 50270 },
         taxAllowance: {
             basicAllowance: 12570,
             taperThreshold: 100000,
@@ -235,6 +240,7 @@ export const taxYears: TaxYearsData = {
             additionalChildRate: 13.95,
         },
         hicbc: { threshold: 50000, taperDivisor: 100 },
+        qualifyingEarnings: { lower: 6240, upper: 50270 },
         taxAllowance: {
             basicAllowance: 12500,
             taperThreshold: 100000,
@@ -280,6 +286,7 @@ export const taxYears: TaxYearsData = {
             additionalChildRate: 13.70,
         },
         hicbc: { threshold: 50000, taperDivisor: 100 },
+        qualifyingEarnings: { lower: 6136, upper: 50000 },
         taxAllowance: {
             basicAllowance: 12500,
             taperThreshold: 100000,
@@ -325,6 +332,7 @@ export const taxYears: TaxYearsData = {
             additionalChildRate: 13.70,
         },
         hicbc: { threshold: 50000, taperDivisor: 100 },
+        qualifyingEarnings: { lower: 6032, upper: 46350 },
         taxAllowance: {
             basicAllowance: 11850,
             taperThreshold: 100000,
@@ -370,6 +378,7 @@ export const taxYears: TaxYearsData = {
             additionalChildRate: 13.70,
         },
         hicbc: { threshold: 50000, taperDivisor: 100 },
+        qualifyingEarnings: { lower: 5876, upper: 45000 },
         taxAllowance: {
             basicAllowance: 11500,
             taperThreshold: 100000,

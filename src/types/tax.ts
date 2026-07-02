@@ -54,9 +54,16 @@ export interface HICBCConstants {
   taperDivisor: number; // 100 (pre-2024/25) or 200 (2024/25+)
 }
 
+// Auto enrolment qualifying earnings band (DWP annual review)
+export interface QualifyingEarningsBand {
+  lower: number;
+  upper: number;
+}
+
 export interface TaxYearConstants {
   childBenefitRates: ChildBenefitRates;
   hicbc: HICBCConstants;
+  qualifyingEarnings: QualifyingEarningsBand;
   taxAllowance: TaxAllowanceConstants;
   nationalInsurance: NationalInsuranceConstants;
   studentLoan: StudentLoanConstants;
@@ -96,6 +103,7 @@ export interface TaxInputs {
   pensionContributions: PensionContributionsInput;
   salarySacrificeIsPercentage: boolean; // salarySacrifice is % of gross income instead of £
   autoEnrolmentAsSalarySacrifice: boolean;
+  autoEnrolmentOnQualifyingEarnings: boolean; // AE % applies to qualifying earnings band vs full pay
   taxReliefAtSource: boolean;
   incomeAnalysis: boolean;
   pensionEnabled: boolean;

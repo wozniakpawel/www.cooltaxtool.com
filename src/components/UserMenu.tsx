@@ -54,6 +54,7 @@ export const defaultInputs: TaxInputs = {
     },
     salarySacrificeIsPercentage: false,
     autoEnrolmentAsSalarySacrifice: true,
+    autoEnrolmentOnQualifyingEarnings: false,
     taxReliefAtSource: true,
     incomeAnalysis: true,
     pensionEnabled: false,
@@ -306,6 +307,14 @@ export function UserMenu({ onUserInputsChange }: UserMenuProps) {
                                                         label={<>As salary sacrifice <InfoPopover {...explanations.autoEnrolmentAsSalarySacrifice} /></>}
                                                         name="autoEnrolmentAsSalarySacrifice"
                                                         checked={values.autoEnrolmentAsSalarySacrifice}
+                                                        onChange={handleInputChange}
+                                                    />
+                                                    <Form.Check
+                                                        type="switch"
+                                                        id="autoEnrolmentOnQualifyingEarnings"
+                                                        label={<>On qualifying earnings <InfoPopover {...explanations.autoEnrolmentOnQualifyingEarnings} /></>}
+                                                        name="autoEnrolmentOnQualifyingEarnings"
+                                                        checked={values.autoEnrolmentOnQualifyingEarnings}
                                                         onChange={handleInputChange}
                                                     />
 

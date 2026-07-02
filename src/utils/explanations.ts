@@ -39,6 +39,11 @@ const explanations: Record<string, { title: string; content: string }> = {
     content:
       "Auto enrolment is the government's workplace pension scheme. Your employer must automatically enrol you and contribute to a pension. The percentage you enter here is your employee contribution rate. The legal minimum total contribution is 8% of qualifying earnings, with at least 3% from your employer — enter the employer rate in the field below.",
   },
+  autoEnrolmentOnQualifyingEarnings: {
+    title: "On Qualifying Earnings",
+    content:
+      "By law, minimum auto enrolment contributions are calculated on 'qualifying earnings' — the slice of your pay between the lower and upper limits set each year by the DWP (£6,240 to £50,270 for recent tax years) — not on your whole salary. Many schemes, however, contribute on full or pensionable pay. Enable this switch if your scheme uses the statutory qualifying earnings band; leave it off if contributions are a percentage of your full pay.",
+  },
   autoEnrolmentEmployer: {
     title: "Auto Enrolment (employer)",
     content:

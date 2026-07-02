@@ -301,12 +301,19 @@ export function calculateTaxes(inputs: TaxInputs): TaxCalculationResult {
     // Apply salary sacrifice
     let incomeAfterSalarySacrifice = Math.max(0, annualGrossIncome.total - salarySacrificeAmount);
 
+    // Auto enrolment earnings base: by law contributions are due on the qualifying
+    // earnings band, but many schemes contribute on full pay instead
+    const { lower: qeLower, upper: qeUpper } = constants.qualifyingEarnings;
+    const autoEnrolmentBase = inputs.autoEnrolmentOnQualifyingEarnings
+        ? Math.min(Math.max(0, incomeAfterSalarySacrifice - qeLower), qeUpper - qeLower)
+        : incomeAfterSalarySacrifice;
+
     // Calculate auto enrolment pension contributions
-    const autoEnrolmentContribution = incomeAfterSalarySacrifice * (pensionContributions.autoEnrolment / 100);
+    const autoEnrolmentContribution = autoEnrolmentBase * (pensionContributions.autoEnrolment / 100);
 
     // Employer auto enrolment contribution: paid by the employer on top of pay,
     // so it goes into the pension pot without affecting the employee's income or taxes
-    const autoEnrolmentEmployerContribution = incomeAfterSalarySacrifice * (pensionContributions.autoEnrolmentEmployer / 100);
+    const autoEnrolmentEmployerContribution = autoEnrolmentBase * (pensionContributions.autoEnrolmentEmployer / 100);
 
     // Deduct auto enrolment contributions from gross income, but only if they are salary sacrificed
     if (autoEnrolmentAsSalarySacrifice)

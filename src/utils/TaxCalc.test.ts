@@ -318,6 +318,7 @@ describe('calculateTaxes', () => {
     pensionContributions: { autoEnrolment: 0, autoEnrolmentEmployer: 0, salarySacrifice: 0, personal: 0 },
     salarySacrificeIsPercentage: false,
     autoEnrolmentAsSalarySacrifice: true,
+    autoEnrolmentOnQualifyingEarnings: false,
     taxReliefAtSource: true,
     incomeAnalysis: false,
     pensionEnabled: false,
@@ -365,6 +366,61 @@ describe('calculateTaxes', () => {
     expect(withEmployer.takeHomePay).toBe(withoutEmployer.takeHomePay);
     expect(withEmployer.combinedTaxes).toBe(withoutEmployer.combinedTaxes);
     expect(withEmployer.adjustedNetIncome).toBe(withoutEmployer.adjustedNetIncome);
+  });
+
+  describe('qualifying earnings band', () => {
+    // 2024/25 band: £6,240 – £50,270
+    it('should apply AE percentages to the qualifying earnings slice when enabled', () => {
+      const result = calculateTaxes({
+        ...baseInputs,
+        annualGrossSalary: 30000,
+        pensionEnabled: true,
+        autoEnrolmentOnQualifyingEarnings: true,
+        pensionContributions: { ...baseInputs.pensionContributions, autoEnrolment: 5, autoEnrolmentEmployer: 3 },
+      });
+
+      // Base = 30,000 - 6,240 = 23,760; employee 5% = 1,188; employer 3% = 712.80
+      expect(result.pensionPot.breakdown[1].amount).toBeCloseTo(1188, 2);
+      expect(result.pensionPot.breakdown[2].amount).toBeCloseTo(712.80, 2);
+    });
+
+    it('should cap the qualifying earnings base at the upper limit', () => {
+      const result = calculateTaxes({
+        ...baseInputs,
+        annualGrossSalary: 80000,
+        pensionEnabled: true,
+        autoEnrolmentOnQualifyingEarnings: true,
+        pensionContributions: { ...baseInputs.pensionContributions, autoEnrolment: 5 },
+      });
+
+      // Base capped at 50,270 - 6,240 = 44,030; 5% = 2,201.50
+      expect(result.pensionPot.breakdown[1].amount).toBeCloseTo(2201.50, 2);
+    });
+
+    it('should contribute nothing below the lower limit', () => {
+      const result = calculateTaxes({
+        ...baseInputs,
+        annualGrossSalary: 6000,
+        pensionEnabled: true,
+        autoEnrolmentOnQualifyingEarnings: true,
+        pensionContributions: { ...baseInputs.pensionContributions, autoEnrolment: 5 },
+      });
+
+      expect(result.pensionPot.total).toBe(0);
+    });
+
+    it('should use full pay when the switch is off', () => {
+      const result = calculateTaxes({
+        ...baseInputs,
+        annualGrossSalary: 30000,
+        pensionEnabled: true,
+        autoEnrolmentOnQualifyingEarnings: false,
+        pensionContributions: { ...baseInputs.pensionContributions, autoEnrolment: 5 },
+      });
+
+      // 5% of full £30,000
+      expect(result.pensionPot.breakdown[1].amount).toBeCloseTo(1500, 2);
+    });
   });
 
   it('should treat salary sacrifice as a percentage of gross income when the flag is set', () => {
