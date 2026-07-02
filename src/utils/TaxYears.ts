@@ -23,6 +23,7 @@ export const taxYears: TaxYearsData = {
             employerRates: [0.15, 0.15],
             employeeRates: [0.08, 0.02],
         },
+        selfEmployedNI: { class2WeeklyRate: 0, class2SmallProfitsThreshold: 6845, class4LowerLimit: 12570, class4UpperLimit: 50270, class4Rates: [0.06, 0.02] },
         studentLoan: {
             defaultRate: 0.09,
             postgradRate: 0.06,
@@ -72,6 +73,7 @@ export const taxYears: TaxYearsData = {
             employerRates: [0.138, 0.138],
             employeeRates: [0.08, 0.02],
         },
+        selfEmployedNI: { class2WeeklyRate: 0, class2SmallProfitsThreshold: 6725, class4LowerLimit: 12570, class4UpperLimit: 50270, class4Rates: [0.06, 0.02] },
         studentLoan: {
             defaultRate: 0.09,
             postgradRate: 0.06,
@@ -121,6 +123,7 @@ export const taxYears: TaxYearsData = {
             employerRates: [0.138, 0.138],
             employeeRates: [0.12, 0.02],
         },
+        selfEmployedNI: { class2WeeklyRate: 3.45, class2SmallProfitsThreshold: 12570, class4LowerLimit: 12570, class4UpperLimit: 50270, class4Rates: [0.09, 0.02] },
         studentLoan: {
             defaultRate: 0.09,
             postgradRate: 0.06,
@@ -170,6 +173,7 @@ export const taxYears: TaxYearsData = {
             employerRates: [0.145314, 0.145314], // effective employer rates
             employeeRates: [0.127314, 0.027314], // effective employee rates
         },
+        selfEmployedNI: { class2WeeklyRate: 3.15, class2SmallProfitsThreshold: 11908, class4LowerLimit: 11908, class4UpperLimit: 50270, class4Rates: [0.0973, 0.0273] },
         studentLoan: {
             defaultRate: 0.09,
             postgradRate: 0.06,
@@ -218,6 +222,7 @@ export const taxYears: TaxYearsData = {
             employerRates: [0.138, 0.138],
             employeeRates: [0.12, 0.02],
         },
+        selfEmployedNI: { class2WeeklyRate: 3.05, class2SmallProfitsThreshold: 6515, class4LowerLimit: 9568, class4UpperLimit: 50270, class4Rates: [0.09, 0.02] },
         studentLoan: {
             defaultRate: 0.09,
             postgradRate: 0.06,
@@ -266,6 +271,7 @@ export const taxYears: TaxYearsData = {
             employerRates: [0.138, 0.138],
             employeeRates: [0.12, 0.02],
         },
+        selfEmployedNI: { class2WeeklyRate: 3.05, class2SmallProfitsThreshold: 6475, class4LowerLimit: 9500, class4UpperLimit: 50000, class4Rates: [0.09, 0.02] },
         studentLoan: {
             defaultRate: 0.09,
             postgradRate: 0.06,
@@ -314,6 +320,7 @@ export const taxYears: TaxYearsData = {
             employerRates: [0.138, 0.138],
             employeeRates: [0.12, 0.02],
         },
+        selfEmployedNI: { class2WeeklyRate: 3.0, class2SmallProfitsThreshold: 6365, class4LowerLimit: 8632, class4UpperLimit: 50000, class4Rates: [0.09, 0.02] },
         studentLoan: {
             defaultRate: 0.09,
             postgradRate: 0.06,
@@ -362,6 +369,7 @@ export const taxYears: TaxYearsData = {
             employerRates: [0.138, 0.138],
             employeeRates: [0.12, 0.02],
         },
+        selfEmployedNI: { class2WeeklyRate: 2.95, class2SmallProfitsThreshold: 6205, class4LowerLimit: 8424, class4UpperLimit: 46350, class4Rates: [0.09, 0.02] },
         studentLoan: {
             defaultRate: 0.09,
             postgradRate: 0.06,
@@ -410,6 +418,7 @@ export const taxYears: TaxYearsData = {
             employerRates: [0.138, 0.138],
             employeeRates: [0.12, 0.02],
         },
+        selfEmployedNI: { class2WeeklyRate: 2.85, class2SmallProfitsThreshold: 6025, class4LowerLimit: 8164, class4UpperLimit: 45000, class4Rates: [0.09, 0.02] },
         studentLoan: {
             defaultRate: 0.09,
             postgradRate: 0.06,

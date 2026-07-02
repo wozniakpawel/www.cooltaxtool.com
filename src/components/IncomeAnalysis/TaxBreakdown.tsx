@@ -78,7 +78,7 @@ const TaxBreakdown = (props: TaxBreakdownProps) => {
             {props.inputs.annualGrossDividends > 0 && renderSingleValue(<>Dividends <InfoPopover {...explanations.annualGrossDividends} /></>, props.inputs.annualGrossDividends)}
             {renderSingleValue(<>Adjusted Net Income <InfoPopover {...explanations.result_adjustedNetIncome} /></>, results.adjustedNetIncome)}
             {renderBreakDown(<>Tax Allowance <InfoPopover {...explanations.result_taxAllowance} /></>, results.taxAllowance)}
-            {renderBreakDown(<>Employer NI <InfoPopover {...explanations.result_employerNI} /></>, results.employerNI)}
+            {!props.inputs.selfEmployed && renderBreakDown(<>Employer NI <InfoPopover {...explanations.result_employerNI} /></>, results.employerNI)}
           </tbody>
         </Table>
 
@@ -94,7 +94,7 @@ const TaxBreakdown = (props: TaxBreakdownProps) => {
           <tbody>
             {renderBreakDown(<>Income Tax <InfoPopover {...explanations.result_incomeTax} /></>, results.incomeTax)}
             {results.dividendTax.total > 0 && renderBreakDown("Dividend Tax", results.dividendTax)}
-            {renderBreakDown(<>Employee NI <InfoPopover {...explanations.result_employeeNI} /></>, results.employeeNI)}
+            {renderBreakDown(<>{props.inputs.selfEmployed ? 'NI (Class 2 & 4)' : 'Employee NI'} <InfoPopover {...explanations.result_employeeNI} /></>, results.employeeNI)}
             {renderBreakDown(<>Student Loan <InfoPopover {...explanations.result_studentLoan} /></>, results.studentLoanRepayments)}
             {results.hicbc > 0 && renderSingleValue("HICBC", results.hicbc)}
           </tbody>

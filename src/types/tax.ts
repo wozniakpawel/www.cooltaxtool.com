@@ -66,6 +66,15 @@ export interface DividendConstants {
   rates: [number, number, number];
 }
 
+// Self-employed National Insurance (Class 2 flat rate + Class 4 on profits)
+export interface SelfEmployedNIConstants {
+  class2WeeklyRate: number; // 0 when Class 2 is abolished / voluntary only
+  class2SmallProfitsThreshold: number;
+  class4LowerLimit: number;
+  class4UpperLimit: number;
+  class4Rates: [number, number];
+}
+
 // Pension annual allowance and its taper for high earners
 export interface PensionAnnualAllowanceConstants {
   standard: number;
@@ -82,6 +91,7 @@ export interface TaxYearConstants {
   dividends: DividendConstants;
   taxAllowance: TaxAllowanceConstants;
   nationalInsurance: NationalInsuranceConstants;
+  selfEmployedNI: SelfEmployedNIConstants;
   studentLoan: StudentLoanConstants;
   incomeTax: IncomeTaxConstants;
 }
@@ -113,6 +123,7 @@ export interface TaxInputs {
   annualGrossDividends: number;
   annualGrossIncomeRange: number;
   workingDaysPerWeek: number; // 5 = full-time; salary is scaled by workingDaysPerWeek/5
+  selfEmployed: boolean; // salary is trading profits; Class 2/4 NICs replace Class 1
   residentInScotland: boolean;
   noNI: boolean;
   blind: boolean;

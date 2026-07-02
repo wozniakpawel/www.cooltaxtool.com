@@ -128,6 +128,44 @@ export function calculateNationalInsurance(
     };
 }
 
+// Self-employed National Insurance: Class 2 flat weekly rate when profits are
+// above the small profits threshold (0 from 2024/25 when Class 2 was abolished),
+// plus Class 4 on profits between the lower and upper limits and above.
+export function calculateSelfEmployedNI(
+    profits: number,
+    constants: TaxYearConstants,
+    noNI: boolean
+): CalculationResult {
+    if (noNI) return { total: 0, breakdown: [] };
+
+    const { class2WeeklyRate, class2SmallProfitsThreshold, class4LowerLimit, class4UpperLimit, class4Rates } = constants.selfEmployedNI;
+
+    let total = 0;
+    const breakdown: BreakdownItem[] = [];
+
+    if (class2WeeklyRate > 0 && profits > class2SmallProfitsThreshold) {
+        const class2 = class2WeeklyRate * 52;
+        total += class2;
+        breakdown.push({ rate: "Class 2", amount: class2 });
+    }
+
+    const inFirstBand = Math.min(Math.max(0, profits - class4LowerLimit), class4UpperLimit - class4LowerLimit);
+    if (inFirstBand > 0) {
+        const ni = inFirstBand * class4Rates[0];
+        total += ni;
+        breakdown.push({ rate: class4Rates[0], amount: ni });
+    }
+
+    const aboveUpper = Math.max(0, profits - class4UpperLimit);
+    if (aboveUpper > 0) {
+        const ni = aboveUpper * class4Rates[1];
+        total += ni;
+        breakdown.push({ rate: class4Rates[1], amount: ni });
+    }
+
+    return { total, breakdown };
+}
+
 // Calculate student loan repayments
 export function calculateStudentLoanRepayments(
     income: number,
@@ -435,15 +473,20 @@ export function calculateTaxes(inputs: TaxInputs): TaxCalculationResult {
     const nonDividendANI = Math.min(adjustedNetIncome, Math.max(0, annualGrossIncome.total - individualPensionContributions));
     const dividendANI = adjustedNetIncome - nonDividendANI;
 
-    // Calculate employee national insurance contributions
-    const employeeNI = calculateNationalInsurance(incomeAfterSalarySacrifice, constants, false, inputs.noNI);
+    // National insurance: the self-employed pay Class 2/4 on profits instead of
+    // Class 1, and there is no employer NI
+    const employeeNI = inputs.selfEmployed
+        ? calculateSelfEmployedNI(incomeAfterSalarySacrifice, constants, inputs.noNI)
+        : calculateNationalInsurance(incomeAfterSalarySacrifice, constants, false, inputs.noNI);
 
-    // Calculate employer national insurance contributions
-    const employerNI = calculateNationalInsurance(incomeAfterSalarySacrifice, constants, true, inputs.noNI);
+    const employerNI = inputs.selfEmployed
+        ? { total: 0, breakdown: [] as BreakdownItem[] }
+        : calculateNationalInsurance(incomeAfterSalarySacrifice, constants, true, inputs.noNI);
 
     // Some employers pass the NI they save on sacrificed salary into the pension
+    // (never applies to the self-employed — there is no employer NI to save)
     let employerNISaving = 0;
-    if (inputs.pensionEnabled && inputs.employerNISavingsToPension) {
+    if (inputs.pensionEnabled && inputs.employerNISavingsToPension && !inputs.selfEmployed) {
         const employerNIWithoutSacrifice = calculateNationalInsurance(annualGrossIncome.total, constants, true, inputs.noNI);
         employerNISaving = employerNIWithoutSacrifice.total - employerNI.total;
         pensionPot.total += employerNISaving;

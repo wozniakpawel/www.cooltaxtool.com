@@ -4,6 +4,11 @@ const explanations: Record<string, { title: string; content: string }> = {
     content:
       "The UK tax year runs from 6 April to 5 April the following year. Tax rates, thresholds, and allowances change each year. Select the tax year you want to calculate for. The 2022/23 year uses estimated effective NI rates due to mid-year rate changes.",
   },
+  selfEmployed: {
+    title: "Self-employed",
+    content:
+      "Treat the salary field as your annual trading profits. Class 2 and Class 4 National Insurance contributions replace employee (Class 1) NI, and there is no employer NI. Class 2 was abolished from April 2024 (it remains available as a voluntary contribution — not modelled here). Income tax, student loans, dividends, and personal pension contributions work as normal. Payments on account and Making Tax Digital are not modelled.",
+  },
   residentInScotland: {
     title: "Resident in Scotland",
     content:

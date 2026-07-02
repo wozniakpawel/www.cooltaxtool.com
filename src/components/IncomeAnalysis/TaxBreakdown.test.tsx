@@ -11,6 +11,7 @@ const testInputs: TaxInputs = {
   annualGrossDividends: 0,
   annualGrossIncomeRange: 150000,
   workingDaysPerWeek: 5,
+  selfEmployed: false,
   residentInScotland: false,
   noNI: false,
   blind: false,

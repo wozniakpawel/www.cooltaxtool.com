@@ -41,6 +41,7 @@ export const defaultInputs: TaxInputs = {
     annualGrossDividends: 0,
     annualGrossIncomeRange: 150000,
     workingDaysPerWeek: 5,
+    selfEmployed: false,
     residentInScotland: false,
     noNI: false,
     blind: false,
@@ -159,6 +160,14 @@ export function UserMenu({ onUserInputsChange }: UserMenuProps) {
                                     </Form.Group>
 
                                     <Form.Group>
+                                        <Form.Check
+                                            type="switch"
+                                            id="selfEmployed"
+                                            label={<>Self-employed <InfoPopover {...explanations.selfEmployed} /></>}
+                                            name="selfEmployed"
+                                            checked={values.selfEmployed}
+                                            onChange={handleInputChange}
+                                        />
                                         <Form.Check
                                             type="switch"
                                             id="residentInScotland"

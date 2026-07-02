@@ -336,6 +336,7 @@ describe('calculateTaxes', () => {
     annualGrossDividends: 0,
     annualGrossIncomeRange: 150000,
     workingDaysPerWeek: 5,
+    selfEmployed: false,
     residentInScotland: false,
     noNI: false,
     blind: false,
@@ -526,6 +527,38 @@ describe('calculateTaxes', () => {
       });
       expect(result.adjustedNetIncome).toBe(115000);
       expect(result.taxAllowance.total).toBe(12570 - 7500);
+    });
+  });
+
+  describe('self-employed', () => {
+    it('should charge Class 4 instead of Class 1 and no employer NI (2024/25)', () => {
+      const employed = calculateTaxes({ ...baseInputs, annualGrossSalary: 50000 });
+      const selfEmployed = calculateTaxes({ ...baseInputs, annualGrossSalary: 50000, selfEmployed: true });
+
+      // Class 4: (50,000 - 12,570) × 6% = £2,245.80; Class 2 abolished in 2024/25
+      expect(selfEmployed.employeeNI.total).toBeCloseTo(2245.80, 2);
+      expect(selfEmployed.employeeNI.breakdown.find(b => b.rate === 'Class 2')).toBeUndefined();
+      expect(selfEmployed.employerNI.total).toBe(0);
+      expect(selfEmployed.incomeTax.total).toBe(employed.incomeTax.total);
+    });
+
+    it('should charge the 2% Class 4 rate above the upper limit', () => {
+      const result = calculateTaxes({ ...baseInputs, annualGrossSalary: 60000, selfEmployed: true });
+      // 37,700 × 6% + 9,730 × 2% = 2,262 + 194.60
+      expect(result.employeeNI.total).toBeCloseTo(2456.60, 2);
+    });
+
+    it('should include Class 2 for years before its abolition (2023/24)', () => {
+      const result = calculateTaxes({ ...baseInputs, taxYear: '2023/24', annualGrossSalary: 50000, selfEmployed: true });
+      // Class 4: (50,000 - 12,570) × 9% = 3,368.70; Class 2: 3.45 × 52 = 179.40
+      const class2 = result.employeeNI.breakdown.find(b => b.rate === 'Class 2');
+      expect(class2?.amount).toBeCloseTo(179.40, 2);
+      expect(result.employeeNI.total).toBeCloseTo(3548.10, 2);
+    });
+
+    it('should respect noNI', () => {
+      const result = calculateTaxes({ ...baseInputs, annualGrossSalary: 50000, selfEmployed: true, noNI: true });
+      expect(result.employeeNI.total).toBe(0);
     });
   });
 
