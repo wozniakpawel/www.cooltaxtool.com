@@ -8,6 +8,7 @@ export const taxYears: TaxYearsData = {
         },
         hicbc: { threshold: 60000, taperDivisor: 200 },
         qualifyingEarnings: { lower: 6240, upper: 50270 },
+        pensionAnnualAllowance: { standard: 60000, taperThresholdIncome: 200000, taperAdjustedIncome: 260000, minimum: 10000 },
         taxAllowance: {
             basicAllowance: 12570,
             taperThreshold: 100000,
@@ -55,6 +56,7 @@ export const taxYears: TaxYearsData = {
         },
         hicbc: { threshold: 60000, taperDivisor: 200 },
         qualifyingEarnings: { lower: 6240, upper: 50270 },
+        pensionAnnualAllowance: { standard: 60000, taperThresholdIncome: 200000, taperAdjustedIncome: 260000, minimum: 10000 },
         taxAllowance: {
             basicAllowance: 12570,
             taperThreshold: 100000,
@@ -102,6 +104,7 @@ export const taxYears: TaxYearsData = {
         },
         hicbc: { threshold: 50000, taperDivisor: 100 },
         qualifyingEarnings: { lower: 6240, upper: 50270 },
+        pensionAnnualAllowance: { standard: 60000, taperThresholdIncome: 200000, taperAdjustedIncome: 260000, minimum: 10000 },
         taxAllowance: {
             basicAllowance: 12570,
             taperThreshold: 100000,
@@ -148,6 +151,7 @@ export const taxYears: TaxYearsData = {
         },
         hicbc: { threshold: 50000, taperDivisor: 100 },
         qualifyingEarnings: { lower: 6240, upper: 50270 },
+        pensionAnnualAllowance: { standard: 40000, taperThresholdIncome: 200000, taperAdjustedIncome: 240000, minimum: 4000 },
         taxAllowance: {
             basicAllowance: 12570,
             taperThreshold: 100000,
@@ -195,6 +199,7 @@ export const taxYears: TaxYearsData = {
         },
         hicbc: { threshold: 50000, taperDivisor: 100 },
         qualifyingEarnings: { lower: 6240, upper: 50270 },
+        pensionAnnualAllowance: { standard: 40000, taperThresholdIncome: 200000, taperAdjustedIncome: 240000, minimum: 4000 },
         taxAllowance: {
             basicAllowance: 12570,
             taperThreshold: 100000,
@@ -241,6 +246,7 @@ export const taxYears: TaxYearsData = {
         },
         hicbc: { threshold: 50000, taperDivisor: 100 },
         qualifyingEarnings: { lower: 6240, upper: 50270 },
+        pensionAnnualAllowance: { standard: 40000, taperThresholdIncome: 200000, taperAdjustedIncome: 240000, minimum: 4000 },
         taxAllowance: {
             basicAllowance: 12500,
             taperThreshold: 100000,
@@ -287,6 +293,7 @@ export const taxYears: TaxYearsData = {
         },
         hicbc: { threshold: 50000, taperDivisor: 100 },
         qualifyingEarnings: { lower: 6136, upper: 50000 },
+        pensionAnnualAllowance: { standard: 40000, taperThresholdIncome: 110000, taperAdjustedIncome: 150000, minimum: 10000 },
         taxAllowance: {
             basicAllowance: 12500,
             taperThreshold: 100000,
@@ -333,6 +340,7 @@ export const taxYears: TaxYearsData = {
         },
         hicbc: { threshold: 50000, taperDivisor: 100 },
         qualifyingEarnings: { lower: 6032, upper: 46350 },
+        pensionAnnualAllowance: { standard: 40000, taperThresholdIncome: 110000, taperAdjustedIncome: 150000, minimum: 10000 },
         taxAllowance: {
             basicAllowance: 11850,
             taperThreshold: 100000,
@@ -379,6 +387,7 @@ export const taxYears: TaxYearsData = {
         },
         hicbc: { threshold: 50000, taperDivisor: 100 },
         qualifyingEarnings: { lower: 5876, upper: 45000 },
+        pensionAnnualAllowance: { standard: 40000, taperThresholdIncome: 110000, taperAdjustedIncome: 150000, minimum: 10000 },
         taxAllowance: {
             basicAllowance: 11500,
             taperThreshold: 100000,

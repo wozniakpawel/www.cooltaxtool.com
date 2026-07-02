@@ -10,6 +10,8 @@ import type {
     ChildBenefitsInput,
     ChildBenefitRates,
     HICBCConstants,
+    PensionAnnualAllowanceConstants,
+    PensionAllowanceResult,
 } from '../types/tax';
 
 // Gross Income = Salary + Bonuses + Other Income (Dividends, Rental Income, etc.)
@@ -271,6 +273,22 @@ export function grossManualPensionContributions(
     return relieved * 1.25 + unrelieved;
 }
 
+// Pension annual allowance, tapered for high earners: reduced by £1 for every
+// £2 of adjusted income over the limit (only when threshold income is also over
+// its limit), down to the minimum. Carry-forward and the MPAA are not modelled.
+export function calculatePensionAnnualAllowance(
+    thresholdIncome: number,
+    adjustedIncome: number,
+    constants: PensionAnnualAllowanceConstants
+): number {
+    const { standard, taperThresholdIncome, taperAdjustedIncome, minimum } = constants;
+    if (thresholdIncome <= taperThresholdIncome || adjustedIncome <= taperAdjustedIncome) {
+        return standard;
+    }
+    const reduction = Math.floor((adjustedIncome - taperAdjustedIncome) / 2);
+    return Math.max(minimum, standard - reduction);
+}
+
 // Top-level function to calculate taxes
 export function calculateTaxes(inputs: TaxInputs): TaxCalculationResult {
     const constants = taxYears[inputs.taxYear];
@@ -383,6 +401,20 @@ export function calculateTaxes(inputs: TaxInputs): TaxCalculationResult {
     const takeHomePay = Math.max(0, incomeAfterSalarySacrifice - netPensionDeductions - combinedTaxes);
     const yourMoney = pensionPot.total + takeHomePay + childBenefitsResult.childBenefits.total;
 
+    // Pension annual allowance check.
+    // Threshold income: income net of gross personal contributions (salary
+    // sacrificed after July 2015 must be added back, so sacrifice is not deducted).
+    // Adjusted income: income plus all employer pension contributions.
+    const thresholdIncome = Math.max(0, annualGrossIncome.total - grossedPersonalContribution);
+    const adjustedIncome = annualGrossIncome.total + autoEnrolmentEmployerContribution + employerNISaving;
+    const allowance = calculatePensionAnnualAllowance(thresholdIncome, adjustedIncome, constants.pensionAnnualAllowance);
+    const pensionAnnualAllowance: PensionAllowanceResult = {
+        allowance,
+        used: pensionPot.total,
+        tapered: allowance < constants.pensionAnnualAllowance.standard,
+        exceeded: pensionPot.total > allowance,
+    };
+
     return {
         annualGrossIncome,
         adjustedNetIncome,
@@ -397,6 +429,7 @@ export function calculateTaxes(inputs: TaxInputs): TaxCalculationResult {
         childBenefits: childBenefitsResult.childBenefits,
         takeHomePay,
         pensionPot,
+        pensionAnnualAllowance,
         yourMoney,
     };
 }

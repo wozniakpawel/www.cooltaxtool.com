@@ -60,10 +60,19 @@ export interface QualifyingEarningsBand {
   upper: number;
 }
 
+// Pension annual allowance and its taper for high earners
+export interface PensionAnnualAllowanceConstants {
+  standard: number;
+  taperThresholdIncome: number; // taper only applies if threshold income exceeds this
+  taperAdjustedIncome: number; // reduced £1 per £2 of adjusted income over this
+  minimum: number;
+}
+
 export interface TaxYearConstants {
   childBenefitRates: ChildBenefitRates;
   hicbc: HICBCConstants;
   qualifyingEarnings: QualifyingEarningsBand;
+  pensionAnnualAllowance: PensionAnnualAllowanceConstants;
   taxAllowance: TaxAllowanceConstants;
   nationalInsurance: NationalInsuranceConstants;
   studentLoan: StudentLoanConstants;
@@ -122,6 +131,13 @@ export interface CalculationResult {
   breakdown: BreakdownItem[];
 }
 
+export interface PensionAllowanceResult {
+  allowance: number; // annual allowance after any taper
+  used: number; // total contributions counted against it
+  tapered: boolean; // allowance was reduced below the year's standard amount
+  exceeded: boolean;
+}
+
 export interface TaxCalculationResult {
   annualGrossIncome: CalculationResult;
   adjustedNetIncome: number;
@@ -136,5 +152,6 @@ export interface TaxCalculationResult {
   childBenefits: CalculationResult;
   takeHomePay: number;
   pensionPot: CalculationResult;
+  pensionAnnualAllowance: PensionAllowanceResult;
   yourMoney: number;
 }

@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 import { calculateTaxes } from "../../utils/TaxCalc";
-import { Table, Card, ButtonGroup, Button } from "react-bootstrap";
+import { Table, Card, ButtonGroup, Button, Alert } from "react-bootstrap";
 import { formatCurrencyPrecise } from "../../utils/chartUtils";
 import type { TaxInputs, CalculationResult } from "../../types/tax";
 import InfoPopover from '../InfoPopover';
@@ -102,6 +102,17 @@ const TaxBreakdown = (props: TaxBreakdownProps) => {
             {results.childBenefits.total > 0 && renderBreakDown(<>Child Benefits <InfoPopover {...explanations.result_childBenefits} /></>, results.childBenefits)}
           </tbody>
         </Table>
+
+        {results.pensionAnnualAllowance.exceeded && (
+          <Alert variant="warning" className="small">
+            <strong>Pension annual allowance exceeded.</strong>{' '}
+            Your total pension contributions ({formatCurrencyPrecise(results.pensionAnnualAllowance.used)}) are over
+            your {results.pensionAnnualAllowance.tapered ? 'tapered ' : ''}annual allowance
+            of {formatCurrencyPrecise(results.pensionAnnualAllowance.allowance)}. The excess is normally subject to the
+            annual allowance charge at your marginal rate (unused allowance carried forward from the previous three
+            years may cover it — not modelled here).
+          </Alert>
+        )}
 
         {period !== 'annual' && (
           <p className="text-muted small mb-0">

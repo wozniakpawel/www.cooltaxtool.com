@@ -5,6 +5,7 @@ import {
   calculateNationalInsurance,
   calculateStudentLoanRepayments,
   calculateChildBenefits,
+  calculatePensionAnnualAllowance,
   grossManualPensionContributions,
   calculateTaxes,
 } from './TaxCalc';
@@ -303,6 +304,28 @@ describe('grossManualPensionContributions', () => {
   });
 });
 
+describe('calculatePensionAnnualAllowance', () => {
+  const aa = constants.pensionAnnualAllowance; // 2024/25: 60k standard, 200k/260k taper, 10k min
+
+  it('should return the standard allowance below the taper limits', () => {
+    expect(calculatePensionAnnualAllowance(150000, 180000, aa)).toBe(60000);
+  });
+
+  it('should not taper when threshold income is under its limit even if adjusted income is over', () => {
+    expect(calculatePensionAnnualAllowance(190000, 270000, aa)).toBe(60000);
+  });
+
+  it('should taper £1 for every £2 of adjusted income over the limit', () => {
+    // Adjusted 300,000: reduction = (300,000 - 260,000) / 2 = 20,000
+    expect(calculatePensionAnnualAllowance(250000, 300000, aa)).toBe(40000);
+  });
+
+  it('should floor the allowance at the minimum', () => {
+    // Adjusted 400,000: reduction 70,000 would exceed 60k - 10k
+    expect(calculatePensionAnnualAllowance(350000, 400000, aa)).toBe(10000);
+  });
+});
+
 describe('calculateTaxes', () => {
   const baseInputs: TaxInputs = {
     taxYear: '2024/25',
@@ -367,6 +390,33 @@ describe('calculateTaxes', () => {
     expect(withEmployer.takeHomePay).toBe(withoutEmployer.takeHomePay);
     expect(withEmployer.combinedTaxes).toBe(withoutEmployer.combinedTaxes);
     expect(withEmployer.adjustedNetIncome).toBe(withoutEmployer.adjustedNetIncome);
+  });
+
+  it('should flag when pension contributions exceed the annual allowance', () => {
+    const result = calculateTaxes({
+      ...baseInputs,
+      annualGrossSalary: 120000,
+      pensionEnabled: true,
+      pensionContributions: { ...baseInputs.pensionContributions, salarySacrifice: 65000 },
+    });
+
+    expect(result.pensionAnnualAllowance.allowance).toBe(60000);
+    expect(result.pensionAnnualAllowance.used).toBe(65000);
+    expect(result.pensionAnnualAllowance.exceeded).toBe(true);
+    expect(result.pensionAnnualAllowance.tapered).toBe(false);
+  });
+
+  it('should taper the allowance for high earners with employer contributions', () => {
+    const result = calculateTaxes({
+      ...baseInputs,
+      annualGrossSalary: 280000,
+      pensionEnabled: true,
+      pensionContributions: { ...baseInputs.pensionContributions, autoEnrolmentEmployer: 10 },
+    });
+
+    // Adjusted income = 280,000 + 28,000 employer = 308,000 → reduction (308,000-260,000)/2 = 24,000
+    expect(result.pensionAnnualAllowance.allowance).toBe(36000);
+    expect(result.pensionAnnualAllowance.tapered).toBe(true);
   });
 
   it('should add employer NI savings on sacrificed salary to the pension pot when enabled', () => {
