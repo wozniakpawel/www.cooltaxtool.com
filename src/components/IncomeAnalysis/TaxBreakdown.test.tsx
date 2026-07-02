@@ -18,6 +18,7 @@ const testInputs: TaxInputs = {
   salarySacrificeIsPercentage: false,
   autoEnrolmentAsSalarySacrifice: true,
   autoEnrolmentOnQualifyingEarnings: false,
+  employerNISavingsToPension: false,
   taxReliefAtSource: true,
   incomeAnalysis: false,
   pensionEnabled: false,

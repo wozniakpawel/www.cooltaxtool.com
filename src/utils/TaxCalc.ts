@@ -347,6 +347,15 @@ export function calculateTaxes(inputs: TaxInputs): TaxCalculationResult {
     // Calculate employer national insurance contributions
     const employerNI = calculateNationalInsurance(incomeAfterSalarySacrifice, constants, true, inputs.noNI);
 
+    // Some employers pass the NI they save on sacrificed salary into the pension
+    let employerNISaving = 0;
+    if (inputs.pensionEnabled && inputs.employerNISavingsToPension) {
+        const employerNIWithoutSacrifice = calculateNationalInsurance(annualGrossIncome.total, constants, true, inputs.noNI);
+        employerNISaving = employerNIWithoutSacrifice.total - employerNI.total;
+        pensionPot.total += employerNISaving;
+        pensionPot.breakdown.push({ rate: "Employer NI saving", amount: employerNISaving });
+    }
+
     // Calculate student loan repayments
     const studentLoanRepayments = calculateStudentLoanRepayments(incomeAfterSalarySacrifice, studentLoan, constants);
 

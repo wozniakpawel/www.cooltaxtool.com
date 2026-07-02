@@ -319,6 +319,7 @@ describe('calculateTaxes', () => {
     salarySacrificeIsPercentage: false,
     autoEnrolmentAsSalarySacrifice: true,
     autoEnrolmentOnQualifyingEarnings: false,
+    employerNISavingsToPension: false,
     taxReliefAtSource: true,
     incomeAnalysis: false,
     pensionEnabled: false,
@@ -366,6 +367,46 @@ describe('calculateTaxes', () => {
     expect(withEmployer.takeHomePay).toBe(withoutEmployer.takeHomePay);
     expect(withEmployer.combinedTaxes).toBe(withoutEmployer.combinedTaxes);
     expect(withEmployer.adjustedNetIncome).toBe(withoutEmployer.adjustedNetIncome);
+  });
+
+  it('should add employer NI savings on sacrificed salary to the pension pot when enabled', () => {
+    const inputs: TaxInputs = {
+      ...baseInputs,
+      pensionEnabled: true,
+      employerNISavingsToPension: true,
+      pensionContributions: { ...baseInputs.pensionContributions, salarySacrifice: 5000 },
+    };
+    const result = calculateTaxes(inputs);
+
+    // 2024/25 employer NI is 13.8%; £5,000 sacrificed entirely above the
+    // secondary threshold saves the employer 5,000 * 0.138 = £690
+    expect(result.pensionPot.total).toBeCloseTo(5000 + 690, 2);
+    const niSaving = result.pensionPot.breakdown.find(b => b.rate === 'Employer NI saving');
+    expect(niSaving?.amount).toBeCloseTo(690, 2);
+
+    // Take-home pay and employee taxes are unaffected by the employer's top-up
+    const withoutTopUp = calculateTaxes({ ...inputs, employerNISavingsToPension: false });
+    expect(result.takeHomePay).toBe(withoutTopUp.takeHomePay);
+    expect(result.combinedTaxes).toBe(withoutTopUp.combinedTaxes);
+    expect(result.adjustedNetIncome).toBe(withoutTopUp.adjustedNetIncome);
+  });
+
+  it('should add no employer NI saving when nothing is sacrificed or NI is excluded', () => {
+    const noSacrifice = calculateTaxes({
+      ...baseInputs,
+      pensionEnabled: true,
+      employerNISavingsToPension: true,
+    });
+    expect(noSacrifice.pensionPot.breakdown.find(b => b.rate === 'Employer NI saving')?.amount).toBe(0);
+
+    const noNI = calculateTaxes({
+      ...baseInputs,
+      noNI: true,
+      pensionEnabled: true,
+      employerNISavingsToPension: true,
+      pensionContributions: { ...baseInputs.pensionContributions, salarySacrifice: 5000 },
+    });
+    expect(noNI.pensionPot.breakdown.find(b => b.rate === 'Employer NI saving')?.amount).toBe(0);
   });
 
   describe('qualifying earnings band', () => {

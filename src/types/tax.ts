@@ -104,6 +104,7 @@ export interface TaxInputs {
   salarySacrificeIsPercentage: boolean; // salarySacrifice is % of gross income instead of £
   autoEnrolmentAsSalarySacrifice: boolean;
   autoEnrolmentOnQualifyingEarnings: boolean; // AE % applies to qualifying earnings band vs full pay
+  employerNISavingsToPension: boolean; // employer passes NI saved on sacrificed salary into the pension
   taxReliefAtSource: boolean;
   incomeAnalysis: boolean;
   pensionEnabled: boolean;

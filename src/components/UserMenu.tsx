@@ -55,6 +55,7 @@ export const defaultInputs: TaxInputs = {
     salarySacrificeIsPercentage: false,
     autoEnrolmentAsSalarySacrifice: true,
     autoEnrolmentOnQualifyingEarnings: false,
+    employerNISavingsToPension: false,
     taxReliefAtSource: true,
     incomeAnalysis: true,
     pensionEnabled: false,
@@ -350,6 +351,14 @@ export function UserMenu({ onUserInputsChange }: UserMenuProps) {
                                                             </InputGroup>
                                                         </Col>
                                                     </Form.Group>
+                                                    <Form.Check
+                                                        type="switch"
+                                                        id="employerNISavingsToPension"
+                                                        label={<>Employer NI savings to pension <InfoPopover {...explanations.employerNISavingsToPension} /></>}
+                                                        name="employerNISavingsToPension"
+                                                        checked={values.employerNISavingsToPension}
+                                                        onChange={handleInputChange}
+                                                    />
 
                                                     <hr />
 

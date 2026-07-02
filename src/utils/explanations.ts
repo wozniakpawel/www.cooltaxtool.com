@@ -39,6 +39,11 @@ const explanations: Record<string, { title: string; content: string }> = {
     content:
       "Auto enrolment is the government's workplace pension scheme. Your employer must automatically enrol you and contribute to a pension. The percentage you enter here is your employee contribution rate. The legal minimum total contribution is 8% of qualifying earnings, with at least 3% from your employer — enter the employer rate in the field below.",
   },
+  employerNISavingsToPension: {
+    title: "Employer NI Savings to Pension",
+    content:
+      "When you sacrifice salary, your employer saves the employer National Insurance they would have paid on that amount (15% for 2025/26). Some employers pass some or all of this saving into your pension as an extra contribution. Enable this if your employer contributes their full NI saving — it's added to your pension pot on top of the sacrificed amount.",
+  },
   autoEnrolmentOnQualifyingEarnings: {
     title: "On Qualifying Earnings",
     content:
