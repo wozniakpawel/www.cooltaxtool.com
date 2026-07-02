@@ -6,6 +6,7 @@ import {
   calculateStudentLoanRepayments,
   calculateChildBenefits,
   calculatePensionAnnualAllowance,
+  calculateDividendTax,
   grossManualPensionContributions,
   calculateTaxes,
 } from './TaxCalc';
@@ -332,6 +333,7 @@ describe('calculateTaxes', () => {
     studentLoan: [],
     annualGrossSalary: 50000,
     annualGrossBonus: 0,
+    annualGrossDividends: 0,
     annualGrossIncomeRange: 150000,
     workingDaysPerWeek: 5,
     residentInScotland: false,
@@ -457,6 +459,74 @@ describe('calculateTaxes', () => {
       pensionContributions: { ...baseInputs.pensionContributions, salarySacrifice: 5000 },
     });
     expect(noNI.pensionPot.breakdown.find(b => b.rate === 'Employer NI saving')?.amount).toBe(0);
+  });
+
+  describe('dividend tax', () => {
+    it('should tax dividends above earnings at the higher dividend rate', () => {
+      const result = calculateTaxes({
+        ...baseInputs,
+        annualGrossSalary: 50000,
+        annualGrossDividends: 10000,
+      });
+
+      // PA fully used by salary. Non-dividend taxable = 37,430. £500 allowance
+      // consumes the last £270 of the basic band + £230 of the higher band;
+      // remaining £9,500 all in the higher band at 33.75% = £3,206.25
+      expect(result.dividendTax.total).toBeCloseTo(3206.25, 2);
+      // No NI on dividends
+      const withoutDividends = calculateTaxes({ ...baseInputs, annualGrossSalary: 50000 });
+      expect(result.employeeNI.total).toBe(withoutDividends.employeeNI.total);
+      expect(result.employerNI.total).toBe(withoutDividends.employerNI.total);
+      // Dividends net of dividend tax land in take-home pay
+      expect(result.takeHomePay).toBeCloseTo(withoutDividends.takeHomePay + 10000 - 3206.25, 2);
+    });
+
+    it('should shelter dividends with unused personal allowance', () => {
+      const result = calculateTaxes({
+        ...baseInputs,
+        annualGrossSalary: 10000,
+        annualGrossDividends: 5000,
+      });
+
+      // PA 12,570; earnings use 10,000, leaving 2,570 for dividends.
+      // Taxable dividends 2,430; £500 allowance at 0%; 1,930 at 8.75% = £168.875
+      expect(result.dividendTax.total).toBeCloseTo(168.88, 2);
+    });
+
+    it('should be zero with no dividends', () => {
+      const result = calculateTaxes(baseInputs);
+      expect(result.dividendTax.total).toBe(0);
+      expect(result.dividendTax.breakdown).toHaveLength(0);
+    });
+
+    it('should use rest-of-UK bands and rates for Scottish residents', () => {
+      const scot = calculateTaxes({
+        ...baseInputs,
+        annualGrossSalary: 50000,
+        annualGrossDividends: 10000,
+        residentInScotland: true,
+      });
+      const ruk = calculateTaxes({
+        ...baseInputs,
+        annualGrossSalary: 50000,
+        annualGrossDividends: 10000,
+        residentInScotland: false,
+      });
+
+      expect(scot.dividendTax.total).toBeCloseTo(ruk.dividendTax.total, 6);
+      expect(scot.incomeTax.total).not.toBe(ruk.incomeTax.total);
+    });
+
+    it('should include dividends in adjusted net income for the PA taper', () => {
+      // 95,000 salary + 20,000 dividends = 115,000 ANI → PA tapered by 7,500
+      const result = calculateTaxes({
+        ...baseInputs,
+        annualGrossSalary: 95000,
+        annualGrossDividends: 20000,
+      });
+      expect(result.adjustedNetIncome).toBe(115000);
+      expect(result.taxAllowance.total).toBe(12570 - 7500);
+    });
   });
 
   describe('qualifying earnings band', () => {

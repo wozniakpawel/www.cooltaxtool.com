@@ -8,6 +8,7 @@ const testInputs: TaxInputs = {
   studentLoan: [],
   annualGrossSalary: 52000,
   annualGrossBonus: 0,
+  annualGrossDividends: 0,
   annualGrossIncomeRange: 150000,
   workingDaysPerWeek: 5,
   residentInScotland: false,

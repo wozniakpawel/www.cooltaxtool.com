@@ -28,6 +28,7 @@ const plotSettings: PlotSetting[] = [
   { key: "taxAllowance", color: "#1abc9c", label: "Tax Allowance", amountOnly: true },
   { key: "taxableIncome", color: "#2980b9", label: "Taxable Income" },
   { key: "incomeTax", color: "#8e44ad", label: "Income Tax" },
+  { key: "dividendTax", color: "#a29bfe", label: "Dividend Tax" },
   { key: "employeeNI", color: "#e74c3c", label: "Employee NI Contributions" },
   { key: "employerNI", color: "#d35400", label: "Employer NI Contributions" },
   { key: "studentLoanRepayments", color: "#f39c12", label: "Student Loan Repayments" },
@@ -55,7 +56,7 @@ const TaxYearOverview = (props: TaxYearOverviewProps) => {
     );
 
     const data: ChartDataPoint[] = grossIncomes.map((grossIncome) => {
-      const { annualGrossIncome, taxAllowance, incomeTax, employeeNI, employerNI, pensionPot, studentLoanRepayments, childBenefits, pensionAnnualAllowance: _pensionAnnualAllowance, ...rest } =
+      const { annualGrossIncome, taxAllowance, incomeTax, dividendTax, employeeNI, employerNI, pensionPot, studentLoanRepayments, childBenefits, pensionAnnualAllowance: _pensionAnnualAllowance, ...rest } =
         calculateTaxes({
           ...props.inputs,
           annualGrossBonus: 0,
@@ -65,6 +66,7 @@ const TaxYearOverview = (props: TaxYearOverviewProps) => {
         annualGrossIncome: annualGrossIncome.total,
         taxAllowance: taxAllowance.total,
         incomeTax: incomeTax.total,
+        dividendTax: dividendTax.total,
         employeeNI: employeeNI.total,
         employerNI: employerNI.total,
         pensionPot: pensionPot.total,

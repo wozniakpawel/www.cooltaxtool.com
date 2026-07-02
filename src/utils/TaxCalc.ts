@@ -273,6 +273,60 @@ export function grossManualPensionContributions(
     return relieved * 1.25 + unrelieved;
 }
 
+// Dividend tax. Dividends stack on top of non-dividend taxable income and are
+// taxed at the dividend rates of whichever band they fall into. Band boundaries
+// are always the rest-of-UK income tax bands — Scottish rates do not apply to
+// dividends. The dividend allowance taxes the first slice at 0% but still
+// consumes band space. There is no NI on dividends.
+export function calculateDividendTax(
+    dividends: number,
+    nonDividendTaxableIncome: number,
+    personalAllowanceRemaining: number,
+    constants: TaxYearConstants
+): CalculationResult {
+    const taxableDividends = Math.max(0, dividends - personalAllowanceRemaining);
+    if (taxableDividends <= 0) {
+        return { total: 0, breakdown: [] };
+    }
+
+    const bands = constants.incomeTax.restOfUK;
+    const { allowance, rates } = constants.dividends;
+
+    const breakdown: BreakdownItem[] = [];
+    const allowanceUsed = Math.min(allowance, taxableDividends);
+    if (allowanceUsed > 0) {
+        breakdown.push({ rate: "Dividend Allowance (0%)", amount: 0 });
+    }
+
+    let position = nonDividendTaxableIncome;
+    let allowanceLeft = allowanceUsed;
+    let taxableLeft = taxableDividends - allowanceUsed;
+    let total = 0;
+
+    for (let i = 0; i < bands.length && (allowanceLeft > 0 || taxableLeft > 0); i++) {
+        const [, limit] = bands[i];
+        if (position >= limit) continue;
+
+        let capacity = limit - position;
+
+        const allowanceHere = Math.min(allowanceLeft, capacity);
+        allowanceLeft -= allowanceHere;
+        position += allowanceHere;
+        capacity -= allowanceHere;
+
+        const taxedHere = Math.min(taxableLeft, capacity);
+        if (taxedHere > 0) {
+            const taxAtRate = taxedHere * rates[i];
+            total += taxAtRate;
+            breakdown.push({ rate: rates[i], amount: taxAtRate });
+            taxableLeft -= taxedHere;
+            position += taxedHere;
+        }
+    }
+
+    return { total, breakdown };
+}
+
 // Pension annual allowance, tapered for high earners: reduced by £1 for every
 // £2 of adjusted income over the limit (only when threshold income is also over
 // its limit), down to the minimum. Carry-forward and the MPAA are not modelled.
@@ -368,8 +422,18 @@ export function calculateTaxes(inputs: TaxInputs): TaxCalculationResult {
         ],
     };
 
-    // Calculate adjusted net income (employer contributions never came out of your income)
-    const adjustedNetIncome = Math.max(0, annualGrossIncome.total - (pensionPot.total - autoEnrolmentEmployerContribution));
+    const dividends = inputs.annualGrossDividends;
+
+    // Calculate adjusted net income (employer contributions never came out of
+    // your income). Dividends count towards ANI, which drives the personal
+    // allowance taper and HICBC.
+    const individualPensionContributions = pensionPot.total - autoEnrolmentEmployerContribution;
+    const adjustedNetIncome = Math.max(0, annualGrossIncome.total + dividends - individualPensionContributions);
+
+    // Split ANI into its earnings part and its dividend part: pension deductions
+    // shelter earnings first, and any excess shelters dividends
+    const nonDividendANI = Math.min(adjustedNetIncome, Math.max(0, annualGrossIncome.total - individualPensionContributions));
+    const dividendANI = adjustedNetIncome - nonDividendANI;
 
     // Calculate employee national insurance contributions
     const employeeNI = calculateNationalInsurance(incomeAfterSalarySacrifice, constants, false, inputs.noNI);
@@ -392,17 +456,21 @@ export function calculateTaxes(inputs: TaxInputs): TaxCalculationResult {
     // Determine the tax allowance (considering personal allowance taper and blind person's allowance)
     const taxAllowance = calculateTaxAllowance(adjustedNetIncome, inputs.blind, constants);
 
-    // Calculate taxable income
-    const taxableIncome = Math.max(0, adjustedNetIncome - taxAllowance.total);
+    // Calculate taxable income (earnings only — dividends are taxed separately)
+    const taxableIncome = Math.max(0, nonDividendANI - taxAllowance.total);
 
     // Calculate income tax
     const incomeTax = calculateIncomeTax(taxableIncome, constants, inputs.residentInScotland);
+
+    // Any personal allowance not used by earnings shelters dividends
+    const allowanceRemainingForDividends = Math.max(0, taxAllowance.total - nonDividendANI);
+    const dividendTax = calculateDividendTax(dividendANI, taxableIncome, allowanceRemainingForDividends, constants);
 
     // Calculate child benefits and HICBC
     const childBenefitsResult = calculateChildBenefits(adjustedNetIncome, inputs.childBenefits, constants.childBenefitRates, constants.hicbc);
 
     // Calculate combined taxes (including HICBC)
-    const combinedTaxes = incomeTax.total + employeeNI.total + studentLoanRepayments.total + childBenefitsResult.hicbc;
+    const combinedTaxes = incomeTax.total + dividendTax.total + employeeNI.total + studentLoanRepayments.total + childBenefitsResult.hicbc;
 
     // Calculate how much you actually keep
     // Pension amounts the employee pays out of remaining income (not already deducted via salary sacrifice)
@@ -410,15 +478,17 @@ export function calculateTaxes(inputs: TaxInputs): TaxCalculationResult {
         (autoEnrolmentAsSalarySacrifice ? 0 : autoEnrolmentContribution)
         + pensionContributions.personal;
 
-    const takeHomePay = Math.max(0, incomeAfterSalarySacrifice - netPensionDeductions - combinedTaxes);
+    // Dividends land in your pocket too; combinedTaxes already includes the
+    // dividend tax, so adding gross dividends here nets them off correctly
+    const takeHomePay = Math.max(0, incomeAfterSalarySacrifice + dividends - netPensionDeductions - combinedTaxes);
     const totalYouKeep = pensionPot.total + takeHomePay + childBenefitsResult.childBenefits.total;
 
     // Pension annual allowance check.
     // Threshold income: income net of gross personal contributions (salary
     // sacrificed after July 2015 must be added back, so sacrifice is not deducted).
     // Adjusted income: income plus all employer pension contributions.
-    const thresholdIncome = Math.max(0, annualGrossIncome.total - grossedPersonalContribution);
-    const adjustedIncome = annualGrossIncome.total + autoEnrolmentEmployerContribution + employerNISaving;
+    const thresholdIncome = Math.max(0, annualGrossIncome.total + dividends - grossedPersonalContribution);
+    const adjustedIncome = annualGrossIncome.total + dividends + autoEnrolmentEmployerContribution + employerNISaving;
     const allowance = calculatePensionAnnualAllowance(thresholdIncome, adjustedIncome, constants.pensionAnnualAllowance);
     const pensionAnnualAllowance: PensionAllowanceResult = {
         allowance,
@@ -433,6 +503,7 @@ export function calculateTaxes(inputs: TaxInputs): TaxCalculationResult {
         taxAllowance,
         taxableIncome,
         incomeTax,
+        dividendTax,
         employeeNI,
         employerNI,
         studentLoanRepayments,

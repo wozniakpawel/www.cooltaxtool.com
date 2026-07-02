@@ -9,6 +9,7 @@ export const taxYears: TaxYearsData = {
         hicbc: { threshold: 60000, taperDivisor: 200 },
         qualifyingEarnings: { lower: 6240, upper: 50270 },
         pensionAnnualAllowance: { standard: 60000, taperThresholdIncome: 200000, taperAdjustedIncome: 260000, minimum: 10000 },
+        dividends: { allowance: 500, rates: [0.0875, 0.3375, 0.3935] },
         taxAllowance: {
             basicAllowance: 12570,
             taperThreshold: 100000,
@@ -57,6 +58,7 @@ export const taxYears: TaxYearsData = {
         hicbc: { threshold: 60000, taperDivisor: 200 },
         qualifyingEarnings: { lower: 6240, upper: 50270 },
         pensionAnnualAllowance: { standard: 60000, taperThresholdIncome: 200000, taperAdjustedIncome: 260000, minimum: 10000 },
+        dividends: { allowance: 500, rates: [0.0875, 0.3375, 0.3935] },
         taxAllowance: {
             basicAllowance: 12570,
             taperThreshold: 100000,
@@ -105,6 +107,7 @@ export const taxYears: TaxYearsData = {
         hicbc: { threshold: 50000, taperDivisor: 100 },
         qualifyingEarnings: { lower: 6240, upper: 50270 },
         pensionAnnualAllowance: { standard: 60000, taperThresholdIncome: 200000, taperAdjustedIncome: 260000, minimum: 10000 },
+        dividends: { allowance: 1000, rates: [0.0875, 0.3375, 0.3935] },
         taxAllowance: {
             basicAllowance: 12570,
             taperThreshold: 100000,
@@ -152,6 +155,7 @@ export const taxYears: TaxYearsData = {
         hicbc: { threshold: 50000, taperDivisor: 100 },
         qualifyingEarnings: { lower: 6240, upper: 50270 },
         pensionAnnualAllowance: { standard: 40000, taperThresholdIncome: 200000, taperAdjustedIncome: 240000, minimum: 4000 },
+        dividends: { allowance: 2000, rates: [0.0875, 0.3375, 0.3935] },
         taxAllowance: {
             basicAllowance: 12570,
             taperThreshold: 100000,
@@ -200,6 +204,7 @@ export const taxYears: TaxYearsData = {
         hicbc: { threshold: 50000, taperDivisor: 100 },
         qualifyingEarnings: { lower: 6240, upper: 50270 },
         pensionAnnualAllowance: { standard: 40000, taperThresholdIncome: 200000, taperAdjustedIncome: 240000, minimum: 4000 },
+        dividends: { allowance: 2000, rates: [0.075, 0.325, 0.381] },
         taxAllowance: {
             basicAllowance: 12570,
             taperThreshold: 100000,
@@ -247,6 +252,7 @@ export const taxYears: TaxYearsData = {
         hicbc: { threshold: 50000, taperDivisor: 100 },
         qualifyingEarnings: { lower: 6240, upper: 50270 },
         pensionAnnualAllowance: { standard: 40000, taperThresholdIncome: 200000, taperAdjustedIncome: 240000, minimum: 4000 },
+        dividends: { allowance: 2000, rates: [0.075, 0.325, 0.381] },
         taxAllowance: {
             basicAllowance: 12500,
             taperThreshold: 100000,
@@ -294,6 +300,7 @@ export const taxYears: TaxYearsData = {
         hicbc: { threshold: 50000, taperDivisor: 100 },
         qualifyingEarnings: { lower: 6136, upper: 50000 },
         pensionAnnualAllowance: { standard: 40000, taperThresholdIncome: 110000, taperAdjustedIncome: 150000, minimum: 10000 },
+        dividends: { allowance: 2000, rates: [0.075, 0.325, 0.381] },
         taxAllowance: {
             basicAllowance: 12500,
             taperThreshold: 100000,
@@ -341,6 +348,7 @@ export const taxYears: TaxYearsData = {
         hicbc: { threshold: 50000, taperDivisor: 100 },
         qualifyingEarnings: { lower: 6032, upper: 46350 },
         pensionAnnualAllowance: { standard: 40000, taperThresholdIncome: 110000, taperAdjustedIncome: 150000, minimum: 10000 },
+        dividends: { allowance: 2000, rates: [0.075, 0.325, 0.381] },
         taxAllowance: {
             basicAllowance: 11850,
             taperThreshold: 100000,
@@ -388,6 +396,7 @@ export const taxYears: TaxYearsData = {
         hicbc: { threshold: 50000, taperDivisor: 100 },
         qualifyingEarnings: { lower: 5876, upper: 45000 },
         pensionAnnualAllowance: { standard: 40000, taperThresholdIncome: 110000, taperAdjustedIncome: 150000, minimum: 10000 },
+        dividends: { allowance: 5000, rates: [0.075, 0.325, 0.381] },
         taxAllowance: {
             basicAllowance: 11500,
             taperThreshold: 100000,

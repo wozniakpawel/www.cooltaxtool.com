@@ -89,6 +89,11 @@ const explanations: Record<string, { title: string; content: string }> = {
     content:
       "Any additional lump-sum payments on top of your salary, such as annual bonuses or commissions. Bonuses are taxed as part of your total income. If you salary-sacrifice part of your bonus into a pension, enter the sacrifice amount in the pension section.",
   },
+  annualGrossDividends: {
+    title: "Annual Gross Dividends",
+    content:
+      "Dividend income from shares, before any tax. Dividends are taxed after your other income, at dividend rates (8.75% / 33.75% / 39.35% for recent years) with a tax-free dividend allowance (£500 for 2024/25 onwards). There is no National Insurance on dividends, and Scottish residents pay the UK-wide dividend rates — Scottish income tax rates don't apply. This tool doesn't count dividends toward student loan repayments.",
+  },
   workingDaysPerWeek: {
     title: "Working Days per Week",
     content:

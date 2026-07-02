@@ -22,6 +22,7 @@ const requiredPositiveNumber = yup.number()
 const schema = yup.object().shape({
     annualGrossSalary: requiredPositiveNumber,
     annualGrossBonus: requiredPositiveNumber,
+    annualGrossDividends: requiredPositiveNumber,
     pensionContributions: yup.object().shape({
         autoEnrolment: requiredPositiveNumber
             .max(30, "Must be less than or equal to 30."),
@@ -37,6 +38,7 @@ export const defaultInputs: TaxInputs = {
     studentLoan: [] as StudentLoanPlan[],
     annualGrossSalary: 0,
     annualGrossBonus: 0,
+    annualGrossDividends: 0,
     annualGrossIncomeRange: 150000,
     workingDaysPerWeek: 5,
     residentInScotland: false,
@@ -86,6 +88,7 @@ const UseEffectWrapper = ({ onUserInputsChange }: UseEffectWrapperProps) => {
         // Scale the full-time salary down (or up) for part-time working patterns
         parsedValues.annualGrossSalary = Number(parsedValues.annualGrossSalary) * (parsedValues.workingDaysPerWeek / 5);
         parsedValues.annualGrossBonus = Number(parsedValues.annualGrossBonus);
+        parsedValues.annualGrossDividends = Number(parsedValues.annualGrossDividends);
         parsedValues.annualGrossIncomeRange = Number(parsedValues.annualGrossIncomeRange);
         parsedValues.pensionContributions = {
             ...parsedValues.pensionContributions,
@@ -455,6 +458,29 @@ export function UserMenu({ onUserInputsChange }: UserMenuProps) {
                                                 />
                                                 <Form.Control.Feedback type="invalid">
                                                     {errors.annualGrossBonus}
+                                                </Form.Control.Feedback>
+                                            </InputGroup>
+                                        </Col>
+                                    </Form.Group>
+
+                                    <Form.Group as={Row} controlId="annualGrossDividends" className="mt-2">
+                                        <Form.Label column>Annual Gross Dividends <InfoPopover {...explanations.annualGrossDividends} /></Form.Label>
+                                        <Col>
+                                            <InputGroup hasValidation>
+                                                <InputGroup.Text>£</InputGroup.Text>
+                                                <Form.Control
+                                                    type="number"
+                                                    inputMode="decimal"
+                                                    name="annualGrossDividends"
+                                                    value={values.annualGrossDividends}
+                                                    onChange={handleInputChange}
+                                                    isValid={!errors.annualGrossDividends}
+                                                    isInvalid={!!errors.annualGrossDividends}
+                                                    min={0}
+                                                    step={500}
+                                                />
+                                                <Form.Control.Feedback type="invalid">
+                                                    {errors.annualGrossDividends}
                                                 </Form.Control.Feedback>
                                             </InputGroup>
                                         </Col>

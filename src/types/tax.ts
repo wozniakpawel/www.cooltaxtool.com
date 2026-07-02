@@ -60,6 +60,12 @@ export interface QualifyingEarningsBand {
   upper: number;
 }
 
+// Dividend allowance and dividend tax rates (basic/higher/additional)
+export interface DividendConstants {
+  allowance: number;
+  rates: [number, number, number];
+}
+
 // Pension annual allowance and its taper for high earners
 export interface PensionAnnualAllowanceConstants {
   standard: number;
@@ -73,6 +79,7 @@ export interface TaxYearConstants {
   hicbc: HICBCConstants;
   qualifyingEarnings: QualifyingEarningsBand;
   pensionAnnualAllowance: PensionAnnualAllowanceConstants;
+  dividends: DividendConstants;
   taxAllowance: TaxAllowanceConstants;
   nationalInsurance: NationalInsuranceConstants;
   studentLoan: StudentLoanConstants;
@@ -103,6 +110,7 @@ export interface TaxInputs {
   studentLoan: StudentLoanPlan[];
   annualGrossSalary: number;
   annualGrossBonus: number;
+  annualGrossDividends: number;
   annualGrossIncomeRange: number;
   workingDaysPerWeek: number; // 5 = full-time; salary is scaled by workingDaysPerWeek/5
   residentInScotland: boolean;
@@ -144,6 +152,7 @@ export interface TaxCalculationResult {
   taxAllowance: CalculationResult;
   taxableIncome: number;
   incomeTax: CalculationResult;
+  dividendTax: CalculationResult;
   employeeNI: CalculationResult;
   employerNI: CalculationResult;
   studentLoanRepayments: CalculationResult;
