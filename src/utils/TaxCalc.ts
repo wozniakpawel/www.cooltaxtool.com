@@ -293,8 +293,13 @@ export function calculateTaxes(inputs: TaxInputs): TaxCalculationResult {
 
     const annualGrossIncome = calculateAnnualGrossIncome(inputs.annualGrossSalary, inputs.annualGrossBonus);
 
+    // Resolve salary sacrifice to a £ amount (it can be entered as a % of gross income)
+    const salarySacrificeAmount = inputs.salarySacrificeIsPercentage
+        ? annualGrossIncome.total * (Math.min(100, pensionContributions.salarySacrifice) / 100)
+        : pensionContributions.salarySacrifice;
+
     // Apply salary sacrifice
-    let incomeAfterSalarySacrifice = Math.max(0, annualGrossIncome.total - pensionContributions.salarySacrifice);
+    let incomeAfterSalarySacrifice = Math.max(0, annualGrossIncome.total - salarySacrificeAmount);
 
     // Calculate auto enrolment pension contributions
     const autoEnrolmentContribution = incomeAfterSalarySacrifice * (pensionContributions.autoEnrolment / 100);
@@ -313,9 +318,9 @@ export function calculateTaxes(inputs: TaxInputs): TaxCalculationResult {
 
     // Calculate how much you will have in your pension pot at the end of the tax year
     const pensionPot: CalculationResult = {
-        total: pensionContributions.salarySacrifice + autoEnrolmentContribution + grossedPersonalContribution,
+        total: salarySacrificeAmount + autoEnrolmentContribution + grossedPersonalContribution,
         breakdown: [
-            { rate: "Salary sacrifice", amount: pensionContributions.salarySacrifice },
+            { rate: "Salary sacrifice", amount: salarySacrificeAmount },
             { rate: "Auto enrolment", amount: autoEnrolmentContribution },
             { rate: "Gross Personal", amount: grossedPersonalContribution },
         ],

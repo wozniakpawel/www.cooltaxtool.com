@@ -87,11 +87,13 @@ export interface TaxInputs {
   annualGrossSalary: number;
   annualGrossBonus: number;
   annualGrossIncomeRange: number;
+  workingDaysPerWeek: number; // 5 = full-time; salary is scaled by workingDaysPerWeek/5
   residentInScotland: boolean;
   noNI: boolean;
   blind: boolean;
   childBenefits: ChildBenefitsInput;
   pensionContributions: PensionContributionsInput;
+  salarySacrificeIsPercentage: boolean; // salarySacrifice is % of gross income instead of £
   autoEnrolmentAsSalarySacrifice: boolean;
   taxReliefAtSource: boolean;
   incomeAnalysis: boolean;

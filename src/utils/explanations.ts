@@ -47,7 +47,7 @@ const explanations: Record<string, { title: string; content: string }> = {
   salarySacrifice: {
     title: "Salary/Bonus Sacrifice",
     content:
-      "Salary sacrifice is an arrangement where you agree to reduce your contractual salary in exchange for a non-cash benefit, typically an employer pension contribution. Because your gross pay is reduced, you save on both Income Tax and National Insurance. The amount entered here is the annual total sacrificed from your salary and/or bonus.",
+      "Salary sacrifice is an arrangement where you agree to reduce your contractual salary in exchange for a non-cash benefit, typically an employer pension contribution. Because your gross pay is reduced, you save on both Income Tax and National Insurance. Enter the annual total sacrificed from your salary and/or bonus — click the £/% button to switch between a fixed amount and a percentage of your gross income.",
   },
   personalContributions: {
     title: "Personal Pension Contributions",
@@ -73,6 +73,11 @@ const explanations: Record<string, { title: string; content: string }> = {
     title: "Annual Gross Bonus",
     content:
       "Any additional lump-sum payments on top of your salary, such as annual bonuses or commissions. Bonuses are taxed as part of your total income. If you salary-sacrifice part of your bonus into a pension, enter the sacrifice amount in the pension section.",
+  },
+  workingDaysPerWeek: {
+    title: "Working Days per Week",
+    content:
+      "Model a part-time working pattern. Enter your full-time salary above, then pick how many days a week you work — the salary is scaled proportionally (e.g. 4 days = 80% of full-time pay) so you can see what dropping to a 4- or 3-day week would mean for your taxes and take-home pay. Your bonus is not scaled.",
   },
   annualGrossIncomeRange: {
     title: "Annual Gross Income Range",

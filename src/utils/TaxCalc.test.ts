@@ -310,11 +310,13 @@ describe('calculateTaxes', () => {
     annualGrossSalary: 50000,
     annualGrossBonus: 0,
     annualGrossIncomeRange: 150000,
+    workingDaysPerWeek: 5,
     residentInScotland: false,
     noNI: false,
     blind: false,
     childBenefits: { mode: 'off', numberOfChildren: 1 },
     pensionContributions: { autoEnrolment: 0, salarySacrifice: 0, personal: 0 },
+    salarySacrificeIsPercentage: false,
     autoEnrolmentAsSalarySacrifice: true,
     taxReliefAtSource: true,
     incomeAnalysis: false,
@@ -343,6 +345,50 @@ describe('calculateTaxes', () => {
 
     expect(result.adjustedNetIncome).toBe(45000);
     expect(result.pensionPot.total).toBe(5000);
+  });
+
+  it('should treat salary sacrifice as a percentage of gross income when the flag is set', () => {
+    const inputs: TaxInputs = {
+      ...baseInputs,
+      pensionEnabled: true,
+      salarySacrificeIsPercentage: true,
+      pensionContributions: { ...baseInputs.pensionContributions, salarySacrifice: 10 },
+    };
+    const result = calculateTaxes(inputs);
+
+    // 10% of £50,000 = £5,000 sacrificed
+    expect(result.adjustedNetIncome).toBe(45000);
+    expect(result.pensionPot.total).toBe(5000);
+    expect(result.pensionPot.breakdown[0].amount).toBe(5000);
+  });
+
+  it('should cap percentage salary sacrifice at 100%', () => {
+    const inputs: TaxInputs = {
+      ...baseInputs,
+      pensionEnabled: true,
+      salarySacrificeIsPercentage: true,
+      pensionContributions: { ...baseInputs.pensionContributions, salarySacrifice: 150 },
+    };
+    const result = calculateTaxes(inputs);
+
+    expect(result.pensionPot.total).toBe(50000);
+    expect(result.adjustedNetIncome).toBe(0);
+    expect(result.takeHomePay).toBe(0);
+  });
+
+  it('should include percentage sacrifice of the bonus too', () => {
+    const inputs: TaxInputs = {
+      ...baseInputs,
+      annualGrossBonus: 10000,
+      pensionEnabled: true,
+      salarySacrificeIsPercentage: true,
+      pensionContributions: { ...baseInputs.pensionContributions, salarySacrifice: 10 },
+    };
+    const result = calculateTaxes(inputs);
+
+    // 10% of £60,000 = £6,000 sacrificed
+    expect(result.pensionPot.total).toBe(6000);
+    expect(result.adjustedNetIncome).toBe(54000);
   });
 
   it('should calculate combined taxes correctly', () => {

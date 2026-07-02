@@ -8,7 +8,7 @@ import { taxYears } from '../utils/TaxYears';
 import { studentLoanOptions } from '../utils/studentLoanOptions';
 import {
     Container, Card, Row, Col, Form, Alert,
-    InputGroup, Collapse,
+    InputGroup, Collapse, Button,
 } from 'react-bootstrap';
 import type { TaxInputs, StudentLoanPlan } from '../types/tax';
 
@@ -36,6 +36,7 @@ export const defaultInputs: TaxInputs = {
     annualGrossSalary: 0,
     annualGrossBonus: 0,
     annualGrossIncomeRange: 150000,
+    workingDaysPerWeek: 5,
     residentInScotland: false,
     noNI: false,
     blind: false,
@@ -48,6 +49,7 @@ export const defaultInputs: TaxInputs = {
         salarySacrifice: 0,
         personal: 0,
     },
+    salarySacrificeIsPercentage: false,
     autoEnrolmentAsSalarySacrifice: true,
     taxReliefAtSource: true,
     incomeAnalysis: true,
@@ -75,7 +77,9 @@ const UseEffectWrapper = ({ onUserInputsChange }: UseEffectWrapperProps) => {
 
     const parseValuesToFloats = (values: TaxInputs): TaxInputs => {
         const parsedValues = { ...values };
-        parsedValues.annualGrossSalary = Number(parsedValues.annualGrossSalary);
+        parsedValues.workingDaysPerWeek = Number(parsedValues.workingDaysPerWeek);
+        // Scale the full-time salary down (or up) for part-time working patterns
+        parsedValues.annualGrossSalary = Number(parsedValues.annualGrossSalary) * (parsedValues.workingDaysPerWeek / 5);
         parsedValues.annualGrossBonus = Number(parsedValues.annualGrossBonus);
         parsedValues.annualGrossIncomeRange = Number(parsedValues.annualGrossIncomeRange);
         parsedValues.pensionContributions = {
@@ -284,7 +288,14 @@ export function UserMenu({ onUserInputsChange }: UserMenuProps) {
                                                         <Form.Label column>Salary/Bonus Sacrifice <InfoPopover {...explanations.salarySacrifice} /></Form.Label>
                                                         <Col>
                                                             <InputGroup hasValidation>
-                                                                <InputGroup.Text>£</InputGroup.Text>
+                                                                <Button
+                                                                    variant="outline-secondary"
+                                                                    aria-label="Switch between pounds and percentage"
+                                                                    title="Switch between £ and %"
+                                                                    onClick={() => setFieldValue('salarySacrificeIsPercentage', !values.salarySacrificeIsPercentage, true)}
+                                                                >
+                                                                    {values.salarySacrificeIsPercentage ? '%' : '£'}
+                                                                </Button>
                                                                 <Form.Control
                                                                     type="number"
                                                                     inputMode="decimal"
@@ -294,7 +305,8 @@ export function UserMenu({ onUserInputsChange }: UserMenuProps) {
                                                                     isValid={!errors.pensionContributions?.salarySacrifice}
                                                                     isInvalid={!!errors.pensionContributions?.salarySacrifice}
                                                                     min={0}
-                                                                    step={100}
+                                                                    max={values.salarySacrificeIsPercentage ? 100 : undefined}
+                                                                    step={values.salarySacrificeIsPercentage ? 1 : 100}
                                                                 />
                                                                 <Form.Control.Feedback type="invalid">
                                                                     {errors.pensionContributions?.salarySacrifice}
@@ -360,6 +372,23 @@ export function UserMenu({ onUserInputsChange }: UserMenuProps) {
                                                     {errors.annualGrossSalary}
                                                 </Form.Control.Feedback>
                                             </InputGroup>
+                                        </Col>
+                                    </Form.Group>
+
+                                    <Form.Group as={Row} controlId="workingDaysPerWeek" className="mt-2">
+                                        <Form.Label column>Working Days per Week <InfoPopover {...explanations.workingDaysPerWeek} /></Form.Label>
+                                        <Col>
+                                            <Form.Select
+                                                name="workingDaysPerWeek"
+                                                value={values.workingDaysPerWeek}
+                                                onChange={handleInputChange}
+                                            >
+                                                {[5, 4, 3, 2, 1].map(days => (
+                                                    <option key={days} value={days}>
+                                                        {days === 5 ? '5 (full-time)' : days}
+                                                    </option>
+                                                ))}
+                                            </Form.Select>
                                         </Col>
                                     </Form.Group>
 
