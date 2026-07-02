@@ -5,8 +5,8 @@ import {
   calculateNationalInsurance,
   calculateStudentLoanRepayments,
   calculateChildBenefits,
-  calculateMonthlyNI,
-  calculateMonthlySL,
+  calculatePeriodNI,
+  calculatePeriodSL,
   calculatePensionAnnualAllowance,
   calculateDividendTax,
   grossManualPensionContributions,
@@ -194,27 +194,35 @@ describe('calculateStudentLoanRepayments', () => {
   });
 });
 
-describe('calculateMonthlyNI', () => {
+describe('calculatePeriodNI', () => {
   it('should charge employee NI on monthly pay with monthly thresholds', () => {
     // (3,000 - 12,570/12) * 8% = (3,000 - 1,047.50) * 0.08 = £156.20
-    const result = calculateMonthlyNI(3000, constants, false, false);
+    const result = calculatePeriodNI(3000, 12, constants, false, false);
     expect(result.total).toBeCloseTo(156.20, 2);
   });
 
   it('should apply the upper earnings limit per month', () => {
     // UEL/12 = 4,189.17: (4,189.17 - 1,047.50) * 8% + (27,000 - 4,189.17) * 2% ≈ £707.55
-    const result = calculateMonthlyNI(27000, constants, false, false);
+    const result = calculatePeriodNI(27000, 12, constants, false, false);
     expect(result.total).toBeCloseTo(707.55, 2);
   });
 
   it('should return zero when noNI is set', () => {
-    expect(calculateMonthlyNI(3000, constants, false, true).total).toBe(0);
+    expect(calculatePeriodNI(3000, 12, constants, false, true).total).toBe(0);
+  });
+
+  it('should charge weekly NI with weekly thresholds including the weekly UEL', () => {
+    // weekly PT = 12,570/52 = 241.73, weekly UEL = 50,270/52 = 966.73
+    // (966.73 - 241.73) * 8% + (1,000 - 966.73) * 2% = 58.00 + 0.67 = 58.67
+    const result = calculatePeriodNI(1000, 52, constants, false, false);
+    expect(result.total).toBeCloseTo(58.67, 2);
+    expect(result.breakdown).toHaveLength(2);
   });
 
   it('demonstrates that a bonus month costs less NI monthly than on an annual basis', () => {
     // 36,000 salary paid evenly + 24,000 bonus in one month
-    const evenMonths = 11 * calculateMonthlyNI(3000, constants, false, false).total;
-    const bonusMonth = calculateMonthlyNI(27000, constants, false, false).total;
+    const evenMonths = 11 * calculatePeriodNI(3000, 12, constants, false, false).total;
+    const bonusMonth = calculatePeriodNI(27000, 12, constants, false, false).total;
     const monthlyBasisTotal = evenMonths + bonusMonth;
     expect(monthlyBasisTotal).toBeCloseTo(2425.75, 1);
 
@@ -225,20 +233,25 @@ describe('calculateMonthlyNI', () => {
   });
 });
 
-describe('calculateMonthlySL', () => {
+describe('calculatePeriodSL', () => {
   it('should charge plan 2 repayments on monthly pay with monthly threshold', () => {
     // threshold 27,295/12 = 2,274.58 → floor((3,000 - 2,274.58) * 0.09) = £65
-    const result = calculateMonthlySL(3000, ['plan2'], constants);
+    const result = calculatePeriodSL(3000, 12, ['plan2'], constants);
     expect(result.total).toBe(65);
   });
 
   it('should return zero below the monthly threshold', () => {
-    expect(calculateMonthlySL(2000, ['plan2'], constants).total).toBe(0);
+    expect(calculatePeriodSL(2000, 12, ['plan2'], constants).total).toBe(0);
+  });
+
+  it('should charge weekly repayments with weekly thresholds', () => {
+    // threshold 27,295/52 = 524.90 → floor((600 - 524.90) * 0.09) = floor(6.76) = £6
+    expect(calculatePeriodSL(600, 52, ['plan2'], constants).total).toBe(6);
   });
 
   it('should stack postgrad on top', () => {
     // plan2: floor(725.42 * 0.09) = 65; postgrad: floor((3,000 - 1,750) * 0.06) = 75
-    const result = calculateMonthlySL(3000, ['plan2', 'postgrad'], constants);
+    const result = calculatePeriodSL(3000, 12, ['plan2', 'postgrad'], constants);
     expect(result.total).toBe(65 + 75);
   });
 });

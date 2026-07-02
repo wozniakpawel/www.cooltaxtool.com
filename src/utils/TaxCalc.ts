@@ -246,12 +246,14 @@ export function calculateStudentLoanRepayments(
     };
 }
 
-// Monthly (per-pay-period) National Insurance, as PAYE actually charges it:
-// the annual thresholds are divided by 12 and applied to each month's pay in
-// isolation, so an uneven month (e.g. a bonus) changes what you actually pay
-// compared to an annual-basis estimate.
-export function calculateMonthlyNI(
-    monthlyPay: number,
+// Per-pay-period National Insurance, as PAYE actually charges it: the annual
+// thresholds are divided by the number of pay periods (12 monthly, 26
+// fortnightly, 52 weekly) and applied to each period's pay in isolation, so an
+// uneven period (e.g. a bonus) changes what you actually pay compared to an
+// annual-basis estimate.
+export function calculatePeriodNI(
+    pay: number,
+    periodsPerYear: number,
     constants: TaxYearConstants,
     employer: boolean,
     noNI: boolean
@@ -259,11 +261,11 @@ export function calculateMonthlyNI(
     if (noNI) return { total: 0, breakdown: [] };
 
     const { primaryThreshold, secondaryThreshold, upperEarningsLimit, employeeRates, employerRates } = constants.nationalInsurance;
-    const firstThreshold = (employer ? secondaryThreshold : primaryThreshold) / 12;
-    const upperLimit = upperEarningsLimit / 12;
+    const firstThreshold = (employer ? secondaryThreshold : primaryThreshold) / periodsPerYear;
+    const upperLimit = upperEarningsLimit / periodsPerYear;
     const rates = employer ? employerRates : employeeRates;
 
-    let remaining = Math.max(0, monthlyPay - firstThreshold);
+    let remaining = Math.max(0, pay - firstThreshold);
     let total = 0;
     const breakdown: BreakdownItem[] = [];
 
@@ -283,10 +285,12 @@ export function calculateMonthlyNI(
     return { total, breakdown };
 }
 
-// Monthly (per-pay-period) student loan repayments: annual thresholds divided
-// by 12, each month's repayment floored to the pound, matching payroll practice
-export function calculateMonthlySL(
-    monthlyPay: number,
+// Per-pay-period student loan repayments: annual thresholds divided by the
+// number of pay periods, each period's repayment floored to the pound,
+// matching payroll practice
+export function calculatePeriodSL(
+    pay: number,
+    periodsPerYear: number,
     studentLoanPlans: StudentLoanPlan[],
     constants: TaxYearConstants
 ): CalculationResult {
@@ -303,16 +307,16 @@ export function calculateMonthlySL(
     // Repayments are based on the plan with the lowest threshold, same as annually
     if (nonPostgradPlans.length > 0) {
         const plan = nonPostgradPlans[0];
-        const monthlyThreshold = thresholds[plan] / 12;
-        const amount = monthlyPay <= monthlyThreshold ? 0 : Math.floor((monthlyPay - monthlyThreshold) * defaultRate);
+        const periodThreshold = thresholds[plan] / periodsPerYear;
+        const amount = pay <= periodThreshold ? 0 : Math.floor((pay - periodThreshold) * defaultRate);
         total += amount;
         const option = studentLoanOptions.find(option => option.plan === plan);
         breakdown.push({ rate: option?.label ?? plan, amount });
     }
 
     if (studentLoanPlans.includes("postgrad")) {
-        const monthlyThreshold = thresholds["postgrad"] / 12;
-        const amount = monthlyPay <= monthlyThreshold ? 0 : Math.floor((monthlyPay - monthlyThreshold) * postgradRate);
+        const periodThreshold = thresholds["postgrad"] / periodsPerYear;
+        const amount = pay <= periodThreshold ? 0 : Math.floor((pay - periodThreshold) * postgradRate);
         total += amount;
         const option = studentLoanOptions.find(option => option.plan === "postgrad");
         breakdown.push({ rate: option?.label ?? "Postgraduate", amount });

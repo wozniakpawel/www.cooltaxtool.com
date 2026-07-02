@@ -53,6 +53,21 @@ describe("PayePlanner", () => {
     expect(screen.getByText("Total")).toBeDefined();
   });
 
+  it("switches to weekly pay periods with 52 rows", () => {
+    render(<PayePlanner inputs={testInputs} theme="light" />);
+    fireEvent.click(screen.getByRole("button", { name: "Weekly" }));
+    const salaryInputs = screen.getAllByLabelText(/gross salary$/i) as HTMLInputElement[];
+    expect(salaryInputs).toHaveLength(52);
+    // 36,000 / 52 = 692.3076... rounded to 2dp in the input
+    expect(salaryInputs[0].value).toBe("692.31");
+  });
+
+  it("switches to fortnightly pay periods with 26 rows", () => {
+    render(<PayePlanner inputs={testInputs} theme="light" />);
+    fireEvent.click(screen.getByRole("button", { name: "Fortnightly" }));
+    expect(screen.getAllByLabelText(/gross salary$/i)).toHaveLength(26);
+  });
+
   it("shows an info message instead of the table for the self-employed", () => {
     render(<PayePlanner inputs={{ ...testInputs, selfEmployed: true }} theme="light" />);
     expect(screen.getByText(/employment income only/i)).toBeDefined();

@@ -3,8 +3,8 @@ import {
   Table, Card, Button, Alert, Form, Row, Col, InputGroup,
 } from "react-bootstrap";
 import {
-  calculateMonthlyNI,
-  calculateMonthlySL,
+  calculatePeriodNI,
+  calculatePeriodSL,
   calculateTaxes,
 } from "../utils/TaxCalc";
 import { taxYears } from "../utils/TaxYears";
@@ -16,10 +16,18 @@ interface PayePlannerProps {
   theme: string;
 }
 
-interface MonthRow {
+interface PeriodRow {
   salary: number;
   bonus: number;
 }
+
+type PayPeriod = 'monthly' | 'fortnightly' | 'weekly';
+
+const PERIODS: Record<PayPeriod, { periodsPerYear: number; label: string }> = {
+  monthly: { periodsPerYear: 12, label: "Monthly" },
+  fortnightly: { periodsPerYear: 26, label: "Fortnightly" },
+  weekly: { periodsPerYear: 52, label: "Weekly" },
+};
 
 // UK tax year runs April to March
 const MONTH_LABELS = [
@@ -27,11 +35,22 @@ const MONTH_LABELS = [
   "October", "November", "December", "January", "February", "March",
 ];
 
-const buildDefaultRows = (annualSalary: number): MonthRow[] =>
-  MONTH_LABELS.map(() => ({ salary: annualSalary / 12, bonus: 0 }));
+const periodLabels = (period: PayPeriod): string[] => {
+  if (period === 'monthly') return MONTH_LABELS;
+  const { periodsPerYear } = PERIODS[period];
+  const noun = period === 'weekly' ? 'Week' : 'Fortnight';
+  return Array.from({ length: periodsPerYear }, (_, i) => `${noun} ${i + 1}`);
+};
+
+const buildDefaultRows = (annualSalary: number, period: PayPeriod): PeriodRow[] =>
+  Array.from({ length: PERIODS[period].periodsPerYear }, () => ({
+    salary: annualSalary / PERIODS[period].periodsPerYear,
+    bonus: 0,
+  }));
 
 const PayePlanner = ({ inputs }: PayePlannerProps) => {
-  const [rows, setRows] = useState<MonthRow[]>(() => buildDefaultRows(inputs.annualGrossSalary));
+  const [period, setPeriod] = useState<PayPeriod>('monthly');
+  const [rows, setRows] = useState<PeriodRow[]>(() => buildDefaultRows(inputs.annualGrossSalary, 'monthly'));
   const [payRiseMonth, setPayRiseMonth] = useState(6);
   const [payRiseSalary, setPayRiseSalary] = useState(0);
   const [taxPaidSoFar, setTaxPaidSoFar] = useState(0);
@@ -41,17 +60,20 @@ const PayePlanner = ({ inputs }: PayePlannerProps) => {
   const aePercent = inputs.pensionEnabled ? inputs.pensionContributions.autoEnrolment : 0;
   const aeSacrificed = inputs.pensionEnabled ? inputs.autoEnrolmentAsSalarySacrifice : true;
 
-  const monthly = useMemo(() => rows.map(({ salary, bonus }) => {
+  const periodsPerYear = PERIODS[period].periodsPerYear;
+  const labels = periodLabels(period);
+
+  const perPeriod = useMemo(() => rows.map(({ salary, bonus }) => {
     const grossPay = salary + bonus;
     const pension = grossPay * (aePercent / 100);
     const niablePay = aeSacrificed ? grossPay - pension : grossPay;
-    const ni = calculateMonthlyNI(niablePay, constants, false, inputs.noNI);
-    const sl = calculateMonthlySL(niablePay, studentLoanPlans, constants);
+    const ni = calculatePeriodNI(niablePay, periodsPerYear, constants, false, inputs.noNI);
+    const sl = calculatePeriodSL(niablePay, periodsPerYear, studentLoanPlans, constants);
     const netIsh = grossPay - pension - ni.total - sl.total;
     return { grossPay, pension, ni: ni.total, sl: sl.total, netIsh };
-  }), [rows, aePercent, aeSacrificed, constants, inputs.noNI, studentLoanPlans]);
+  }), [rows, periodsPerYear, aePercent, aeSacrificed, constants, inputs.noNI, studentLoanPlans]);
 
-  const totals = useMemo(() => monthly.reduce(
+  const totals = useMemo(() => perPeriod.reduce(
     (acc, m) => ({
       grossPay: acc.grossPay + m.grossPay,
       pension: acc.pension + m.pension,
@@ -60,7 +82,7 @@ const PayePlanner = ({ inputs }: PayePlannerProps) => {
       netIsh: acc.netIsh + m.netIsh,
     }),
     { grossPay: 0, pension: 0, ni: 0, sl: 0, netIsh: 0 }
-  ), [monthly]);
+  ), [perPeriod]);
 
   // Annual-basis comparison on the same yearly totals
   const annualBasis = useMemo(() => calculateTaxes({
@@ -83,7 +105,13 @@ const PayePlanner = ({ inputs }: PayePlannerProps) => {
   const taxDue = annualBasis.incomeTax.total + annualBasis.dividendTax.total;
   const hmrcBalance = taxPaidSoFar - taxDue;
 
-  const setRow = (index: number, field: keyof MonthRow, value: number) => {
+  const switchPeriod = (next: PayPeriod) => {
+    setPeriod(next);
+    setRows(buildDefaultRows(inputs.annualGrossSalary, next));
+    setPayRiseMonth(0);
+  };
+
+  const setRow = (index: number, field: keyof PeriodRow, value: number) => {
     setRows(rows.map((row, i) => (i === index ? { ...row, [field]: value } : row)));
   };
 
@@ -95,13 +123,23 @@ const PayePlanner = ({ inputs }: PayePlannerProps) => {
           <p className="small text-muted mb-2">
             NI and student loan are charged per pay period, not annually — so a
             bonus month or a mid-year pay rise changes what you actually pay.
-            Edit the monthly amounts below to match your payslips.
+            Edit the amounts below to match your payslips.
           </p>
+
+          <div className="mb-2">
+            {(Object.keys(PERIODS) as PayPeriod[]).map(p => (
+              <Button key={p} size="sm" className="me-1"
+                variant={period === p ? 'primary' : 'outline-primary'}
+                onClick={() => switchPeriod(p)}>
+                {PERIODS[p].label}
+              </Button>
+            ))}
+          </div>
 
           <Row className="g-2 align-items-end mb-3">
             <Col xs="auto">
               <Button size="sm" variant="outline-secondary"
-                onClick={() => setRows(buildDefaultRows(inputs.annualGrossSalary))}>
+                onClick={() => setRows(buildDefaultRows(inputs.annualGrossSalary, period))}>
                 Reset from annual inputs
               </Button>
             </Col>
@@ -109,7 +147,7 @@ const PayePlanner = ({ inputs }: PayePlannerProps) => {
               <Form.Label className="small mb-0">Pay rise from</Form.Label>
               <Form.Select size="sm" value={payRiseMonth} aria-label="Pay rise month"
                 onChange={e => setPayRiseMonth(Number(e.target.value))}>
-                {MONTH_LABELS.map((label, i) => (
+                {labels.map((label, i) => (
                   <option key={label} value={i}>{label}</option>
                 ))}
               </Form.Select>
@@ -126,7 +164,7 @@ const PayePlanner = ({ inputs }: PayePlannerProps) => {
             <Col xs="auto">
               <Button size="sm" variant="outline-primary"
                 onClick={() => setRows(rows.map((row, i) =>
-                  i >= payRiseMonth ? { ...row, salary: payRiseSalary / 12 } : row
+                  i >= payRiseMonth ? { ...row, salary: payRiseSalary / periodsPerYear } : row
                 ))}>
                 Apply pay rise
               </Button>
@@ -137,7 +175,7 @@ const PayePlanner = ({ inputs }: PayePlannerProps) => {
             <Table size="sm" className="align-middle">
               <thead>
                 <tr>
-                  <th>Month</th>
+                  <th>{period === 'monthly' ? 'Month' : 'Period'}</th>
                   <th>Gross Salary</th>
                   <th>Bonus</th>
                   <th className="text-end">Employee NI</th>
@@ -148,24 +186,24 @@ const PayePlanner = ({ inputs }: PayePlannerProps) => {
               </thead>
               <tbody>
                 {rows.map((row, i) => (
-                  <tr key={MONTH_LABELS[i]}>
-                    <td>{MONTH_LABELS[i]}</td>
+                  <tr key={labels[i]}>
+                    <td>{labels[i]}</td>
                     <td>
                       <Form.Control size="sm" type="number" min={0} step={100}
-                        aria-label={`${MONTH_LABELS[i]} gross salary`}
+                        aria-label={`${labels[i]} gross salary`}
                         value={Math.round(row.salary * 100) / 100}
                         onChange={e => setRow(i, "salary", Number(e.target.value))} />
                     </td>
                     <td>
                       <Form.Control size="sm" type="number" min={0} step={100}
-                        aria-label={`${MONTH_LABELS[i]} bonus`}
+                        aria-label={`${labels[i]} bonus`}
                         value={row.bonus}
                         onChange={e => setRow(i, "bonus", Number(e.target.value))} />
                     </td>
-                    <td className="text-end">{formatCurrencyPrecise(monthly[i].ni)}</td>
-                    <td className="text-end">{formatCurrencyPrecise(monthly[i].sl)}</td>
-                    <td className="text-end">{formatCurrencyPrecise(monthly[i].pension)}</td>
-                    <td className="text-end">{formatCurrencyPrecise(monthly[i].netIsh)}</td>
+                    <td className="text-end">{formatCurrencyPrecise(perPeriod[i].ni)}</td>
+                    <td className="text-end">{formatCurrencyPrecise(perPeriod[i].sl)}</td>
+                    <td className="text-end">{formatCurrencyPrecise(perPeriod[i].pension)}</td>
+                    <td className="text-end">{formatCurrencyPrecise(perPeriod[i].netIsh)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -197,7 +235,7 @@ const PayePlanner = ({ inputs }: PayePlannerProps) => {
               <tr>
                 <td className="small text-muted" style={{ paddingLeft: "2em" }}>
                   vs annual-basis estimate {formatCurrencyPrecise(annualBasis.employeeNI.total)}
-                  {" — "}{niDifference >= 0 ? "you pay less" : "you pay more"} monthly by
+                  {" — "}{niDifference >= 0 ? "you pay less" : "you pay more"} per period by
                 </td>
                 <td className="text-end small text-muted">{formatCurrencyPrecise(Math.abs(niDifference))}</td>
               </tr>
