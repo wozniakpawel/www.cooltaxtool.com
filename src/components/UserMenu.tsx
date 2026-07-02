@@ -25,6 +25,8 @@ const schema = yup.object().shape({
     pensionContributions: yup.object().shape({
         autoEnrolment: requiredPositiveNumber
             .max(30, "Must be less than or equal to 30."),
+        autoEnrolmentEmployer: requiredPositiveNumber
+            .max(100, "Must be less than or equal to 100."),
         salarySacrifice: requiredPositiveNumber,
         personal: requiredPositiveNumber,
     }),
@@ -46,6 +48,7 @@ export const defaultInputs: TaxInputs = {
     },
     pensionContributions: {
         autoEnrolment: 0,
+        autoEnrolmentEmployer: 0,
         salarySacrifice: 0,
         personal: 0,
     },
@@ -85,6 +88,7 @@ const UseEffectWrapper = ({ onUserInputsChange }: UseEffectWrapperProps) => {
         parsedValues.pensionContributions = {
             ...parsedValues.pensionContributions,
             autoEnrolment: Number(parsedValues.pensionContributions.autoEnrolment),
+            autoEnrolmentEmployer: Number(parsedValues.pensionContributions.autoEnrolmentEmployer),
             salarySacrifice: Number(parsedValues.pensionContributions.salarySacrifice),
             personal: Number(parsedValues.pensionContributions.personal),
         };
@@ -251,7 +255,7 @@ export function UserMenu({ onUserInputsChange }: UserMenuProps) {
                                             <Collapse in={values.pensionEnabled}>
                                                 <div>
                                                     <Form.Group as={Row} controlId="pensionContributions.autoEnrolment">
-                                                        <Form.Label column>Auto Enrolment <InfoPopover {...explanations.autoEnrolment} /></Form.Label>
+                                                        <Form.Label column>Auto Enrolment (you) <InfoPopover {...explanations.autoEnrolment} /></Form.Label>
                                                         <Col>
                                                             <InputGroup hasValidation>
                                                                 <InputGroup.Text>%</InputGroup.Text>
@@ -269,6 +273,29 @@ export function UserMenu({ onUserInputsChange }: UserMenuProps) {
                                                                 />
                                                                 <Form.Control.Feedback type="invalid">
                                                                     {errors.pensionContributions?.autoEnrolment}
+                                                                </Form.Control.Feedback>
+                                                            </InputGroup>
+                                                        </Col>
+                                                    </Form.Group>
+                                                    <Form.Group as={Row} controlId="pensionContributions.autoEnrolmentEmployer">
+                                                        <Form.Label column>Auto Enrolment (employer) <InfoPopover {...explanations.autoEnrolmentEmployer} /></Form.Label>
+                                                        <Col>
+                                                            <InputGroup hasValidation>
+                                                                <InputGroup.Text>%</InputGroup.Text>
+                                                                <Form.Control
+                                                                    type="number"
+                                                                    inputMode="decimal"
+                                                                    name="pensionContributions.autoEnrolmentEmployer"
+                                                                    value={values.pensionContributions.autoEnrolmentEmployer}
+                                                                    onChange={handleInputChange}
+                                                                    isValid={!errors.pensionContributions?.autoEnrolmentEmployer}
+                                                                    isInvalid={!!errors.pensionContributions?.autoEnrolmentEmployer}
+                                                                    min={0}
+                                                                    max={100}
+                                                                    step={0.1}
+                                                                />
+                                                                <Form.Control.Feedback type="invalid">
+                                                                    {errors.pensionContributions?.autoEnrolmentEmployer}
                                                                 </Form.Control.Feedback>
                                                             </InputGroup>
                                                         </Col>

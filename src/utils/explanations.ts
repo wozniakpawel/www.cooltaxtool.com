@@ -37,7 +37,12 @@ const explanations: Record<string, { title: string; content: string }> = {
   autoEnrolment: {
     title: "Auto Enrolment",
     content:
-      "Auto enrolment is the government's workplace pension scheme. Your employer must automatically enrol you and contribute to a pension. The percentage you enter here is your employee contribution rate applied to your qualifying earnings. The legal minimum total contribution is 8% (with at least 3% from your employer — not modelled here).",
+      "Auto enrolment is the government's workplace pension scheme. Your employer must automatically enrol you and contribute to a pension. The percentage you enter here is your employee contribution rate. The legal minimum total contribution is 8% of qualifying earnings, with at least 3% from your employer — enter the employer rate in the field below.",
+  },
+  autoEnrolmentEmployer: {
+    title: "Auto Enrolment (employer)",
+    content:
+      "Your employer's contribution rate to your workplace pension. The legal minimum is 3% of qualifying earnings, but many employers pay more or match extra employee contributions. Employer contributions go straight into your pension pot — they are paid on top of your salary and don't affect your take-home pay or taxes.",
   },
   autoEnrolmentAsSalarySacrifice: {
     title: "Auto Enrolment as Salary Sacrifice",

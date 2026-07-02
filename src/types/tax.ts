@@ -76,7 +76,8 @@ export interface ChildBenefitsInput {
 }
 
 export interface PensionContributionsInput {
-  autoEnrolment: number;
+  autoEnrolment: number; // employee contribution %
+  autoEnrolmentEmployer: number; // employer contribution %
   salarySacrifice: number;
   personal: number;
 }

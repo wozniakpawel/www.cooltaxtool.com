@@ -315,7 +315,7 @@ describe('calculateTaxes', () => {
     noNI: false,
     blind: false,
     childBenefits: { mode: 'off', numberOfChildren: 1 },
-    pensionContributions: { autoEnrolment: 0, salarySacrifice: 0, personal: 0 },
+    pensionContributions: { autoEnrolment: 0, autoEnrolmentEmployer: 0, salarySacrifice: 0, personal: 0 },
     salarySacrificeIsPercentage: false,
     autoEnrolmentAsSalarySacrifice: true,
     taxReliefAtSource: true,
@@ -345,6 +345,26 @@ describe('calculateTaxes', () => {
 
     expect(result.adjustedNetIncome).toBe(45000);
     expect(result.pensionPot.total).toBe(5000);
+  });
+
+  it('should add employer auto enrolment contributions to the pension pot without affecting pay', () => {
+    const withoutEmployer = calculateTaxes({
+      ...baseInputs,
+      pensionEnabled: true,
+      pensionContributions: { ...baseInputs.pensionContributions, autoEnrolment: 5 },
+    });
+    const withEmployer = calculateTaxes({
+      ...baseInputs,
+      pensionEnabled: true,
+      pensionContributions: { ...baseInputs.pensionContributions, autoEnrolment: 5, autoEnrolmentEmployer: 3 },
+    });
+
+    // Employer pays 3% of £50,000 = £1,500 into the pot
+    expect(withEmployer.pensionPot.total).toBeCloseTo(withoutEmployer.pensionPot.total + 1500, 6);
+    // Employee's taxes and take-home pay are unchanged
+    expect(withEmployer.takeHomePay).toBe(withoutEmployer.takeHomePay);
+    expect(withEmployer.combinedTaxes).toBe(withoutEmployer.combinedTaxes);
+    expect(withEmployer.adjustedNetIncome).toBe(withoutEmployer.adjustedNetIncome);
   });
 
   it('should treat salary sacrifice as a percentage of gross income when the flag is set', () => {
@@ -459,7 +479,7 @@ describe('calculateTaxes', () => {
         const result = calculateTaxes({
             ...baseInputs,
             pensionEnabled: false,
-            pensionContributions: { autoEnrolment: 5, salarySacrifice: 5000, personal: 3000 },
+            pensionContributions: { autoEnrolment: 5, autoEnrolmentEmployer: 0, salarySacrifice: 5000, personal: 3000 },
         });
         expect(result.pensionPot.total).toBe(0);
     });
@@ -469,7 +489,7 @@ describe('calculateTaxes', () => {
             ...baseInputs,
             pensionEnabled: true,
             annualGrossSalary: 50000,
-            pensionContributions: { autoEnrolment: 5, salarySacrifice: 5000, personal: 3000 },
+            pensionContributions: { autoEnrolment: 5, autoEnrolmentEmployer: 0, salarySacrifice: 5000, personal: 3000 },
         });
         expect(result.pensionPot.total).toBeGreaterThan(0);
     });

@@ -280,7 +280,7 @@ export function calculateTaxes(inputs: TaxInputs): TaxCalculationResult {
 
     const pensionContributions = inputs.pensionEnabled
         ? inputs.pensionContributions
-        : { autoEnrolment: 0, salarySacrifice: 0, personal: 0 };
+        : { autoEnrolment: 0, autoEnrolmentEmployer: 0, salarySacrifice: 0, personal: 0 };
     const autoEnrolmentAsSalarySacrifice = inputs.pensionEnabled
         ? inputs.autoEnrolmentAsSalarySacrifice
         : true;
@@ -304,6 +304,10 @@ export function calculateTaxes(inputs: TaxInputs): TaxCalculationResult {
     // Calculate auto enrolment pension contributions
     const autoEnrolmentContribution = incomeAfterSalarySacrifice * (pensionContributions.autoEnrolment / 100);
 
+    // Employer auto enrolment contribution: paid by the employer on top of pay,
+    // so it goes into the pension pot without affecting the employee's income or taxes
+    const autoEnrolmentEmployerContribution = incomeAfterSalarySacrifice * (pensionContributions.autoEnrolmentEmployer / 100);
+
     // Deduct auto enrolment contributions from gross income, but only if they are salary sacrificed
     if (autoEnrolmentAsSalarySacrifice)
         incomeAfterSalarySacrifice -= autoEnrolmentContribution;
@@ -318,16 +322,17 @@ export function calculateTaxes(inputs: TaxInputs): TaxCalculationResult {
 
     // Calculate how much you will have in your pension pot at the end of the tax year
     const pensionPot: CalculationResult = {
-        total: salarySacrificeAmount + autoEnrolmentContribution + grossedPersonalContribution,
+        total: salarySacrificeAmount + autoEnrolmentContribution + autoEnrolmentEmployerContribution + grossedPersonalContribution,
         breakdown: [
             { rate: "Salary sacrifice", amount: salarySacrificeAmount },
-            { rate: "Auto enrolment", amount: autoEnrolmentContribution },
+            { rate: "Auto enrolment (you)", amount: autoEnrolmentContribution },
+            { rate: "Auto enrolment (employer)", amount: autoEnrolmentEmployerContribution },
             { rate: "Gross Personal", amount: grossedPersonalContribution },
         ],
     };
 
-    // Calculate adjusted net income
-    const adjustedNetIncome = Math.max(0, annualGrossIncome.total - pensionPot.total);
+    // Calculate adjusted net income (employer contributions never came out of your income)
+    const adjustedNetIncome = Math.max(0, annualGrossIncome.total - (pensionPot.total - autoEnrolmentEmployerContribution));
 
     // Calculate employee national insurance contributions
     const employeeNI = calculateNationalInsurance(incomeAfterSalarySacrifice, constants, false, inputs.noNI);

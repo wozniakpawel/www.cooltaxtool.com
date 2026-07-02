@@ -14,7 +14,7 @@ const testInputs: TaxInputs = {
   noNI: false,
   blind: false,
   childBenefits: { mode: 'off', numberOfChildren: 1 },
-  pensionContributions: { autoEnrolment: 0, salarySacrifice: 0, personal: 0 },
+  pensionContributions: { autoEnrolment: 0, autoEnrolmentEmployer: 0, salarySacrifice: 0, personal: 0 },
   salarySacrificeIsPercentage: false,
   autoEnrolmentAsSalarySacrifice: true,
   taxReliefAtSource: true,
