@@ -82,39 +82,43 @@ const TaxBreakdown = (props: TaxBreakdownProps) => {
           </tbody>
         </Table>
 
-        <Table size="sm" variant="danger" style={{ color: "#000" }}>
-          <thead>
-            <tr>
-              <th>Total you pay <InfoPopover {...explanations.result_combinedTaxes} /></th>
-              <td style={{ fontWeight: "bold" }} className="text-end">
-                {formatCurrencyPrecise(results.combinedTaxes / divisor)}
-              </td>
-            </tr>
-          </thead>
-          <tbody>
-            {renderBreakDown(<>Income Tax <InfoPopover {...explanations.result_incomeTax} /></>, results.incomeTax)}
-            {results.dividendTax.total > 0 && renderBreakDown("Dividend Tax", results.dividendTax)}
-            {renderBreakDown(<>{props.inputs.selfEmployed ? 'NI (Class 2 & 4)' : 'Employee NI'} <InfoPopover {...explanations.result_employeeNI} /></>, results.employeeNI)}
-            {renderBreakDown(<>Student Loan <InfoPopover {...explanations.result_studentLoan} /></>, results.studentLoanRepayments)}
-            {results.hicbc > 0 && renderSingleValue("HICBC", results.hicbc)}
-          </tbody>
-        </Table>
+        <div className="ledger-panel ledger-pay">
+          <Table size="sm">
+            <thead>
+              <tr>
+                <th>Total you pay <InfoPopover {...explanations.result_combinedTaxes} /></th>
+                <td className="text-end">
+                  {formatCurrencyPrecise(results.combinedTaxes / divisor)}
+                </td>
+              </tr>
+            </thead>
+            <tbody>
+              {renderBreakDown(<>Income Tax <InfoPopover {...explanations.result_incomeTax} /></>, results.incomeTax)}
+              {results.dividendTax.total > 0 && renderBreakDown("Dividend Tax", results.dividendTax)}
+              {renderBreakDown(<>{props.inputs.selfEmployed ? 'NI (Class 2 & 4)' : 'Employee NI'} <InfoPopover {...explanations.result_employeeNI} /></>, results.employeeNI)}
+              {renderBreakDown(<>Student Loan <InfoPopover {...explanations.result_studentLoan} /></>, results.studentLoanRepayments)}
+              {results.hicbc > 0 && renderSingleValue("HICBC", results.hicbc)}
+            </tbody>
+          </Table>
+        </div>
 
-        <Table size="sm" variant="success" style={{ color: "#000" }}>
-          <thead>
-            <tr>
-              <th>Total you keep <InfoPopover {...explanations.result_totalYouKeep} /></th>
-              <td style={{ fontWeight: "bold" }} className="text-end">
-                {formatCurrencyPrecise(results.totalYouKeep / divisor)}
-              </td>
-            </tr>
-          </thead>
-          <tbody>
-            {renderSingleValue(<>Take Home Pay <InfoPopover {...explanations.result_takeHomePay} /></>, results.takeHomePay)}
-            {renderBreakDown(<>Pension Pot <InfoPopover {...explanations.result_pensionPot} /></>, results.pensionPot)}
-            {results.childBenefits.total > 0 && renderBreakDown(<>Child Benefits <InfoPopover {...explanations.result_childBenefits} /></>, results.childBenefits)}
-          </tbody>
-        </Table>
+        <div className="ledger-panel ledger-keep">
+          <Table size="sm">
+            <thead>
+              <tr>
+                <th>Total you keep <InfoPopover {...explanations.result_totalYouKeep} /></th>
+                <td className="text-end">
+                  {formatCurrencyPrecise(results.totalYouKeep / divisor)}
+                </td>
+              </tr>
+            </thead>
+            <tbody>
+              {renderSingleValue(<>Take Home Pay <InfoPopover {...explanations.result_takeHomePay} /></>, results.takeHomePay)}
+              {renderBreakDown(<>Pension Pot <InfoPopover {...explanations.result_pensionPot} /></>, results.pensionPot)}
+              {results.childBenefits.total > 0 && renderBreakDown(<>Child Benefits <InfoPopover {...explanations.result_childBenefits} /></>, results.childBenefits)}
+            </tbody>
+          </Table>
+        </div>
 
         {props.inputs.pensionEnabled && pensionGained > 0 && (
           <Alert variant="info" className="small">

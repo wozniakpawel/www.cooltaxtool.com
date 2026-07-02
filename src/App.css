@@ -1,23 +1,4 @@
-html,
-body {
-  height: 100%;
-  margin: 0;
-}
-
+/* Layout only — all theming lives in index.css */
 .page-content {
   flex-grow: 1;
-}
-
-.dark,
-.dark .card,
-.dark .table {
-  background-color: #333;
-  color: #fff;
-  border-color: white;
-}
-.light,
-.light .card {
-  background-color: #fff;
-  color: #333;
-  border-color: black;
 }

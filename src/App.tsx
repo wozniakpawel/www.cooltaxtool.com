@@ -7,7 +7,6 @@ import PayePlanner from "./components/PayePlanner";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import type { TaxInputs } from "./types/tax";
-import "bootstrap/dist/css/bootstrap.min.css";
 
 const getInitialTheme = () => {
   const savedTheme = localStorage.getItem("theme");

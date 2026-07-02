@@ -1,4 +1,4 @@
-import { Navbar, Container, Row, Form } from "react-bootstrap";
+import { Navbar, Container, Form } from "react-bootstrap";
 
 interface HeaderProps {
   theme: string;
@@ -7,21 +7,13 @@ interface HeaderProps {
 
 const Header = ({ theme, toggleTheme }: HeaderProps) => {
   return (
-    <Navbar>
-      <Container className="justify-content-center large">
+    <Navbar className="ctt-header">
+      <Container className="justify-content-between align-items-end">
         <Navbar.Brand>
-          <Row>
-            <h1>
-              <strong>
-                <span className="text-primary">Cool</span>
-                <span className="text-danger">Tax</span>
-                <span className="text-primary">Tool</span>
-              </strong>
-            </h1>
-          </Row>
-          <Row className="text-primary">
-            UK Tax Calculator & Visualiser
-          </Row>
+          <h1 className="ctt-wordmark">
+            Cool<span className="warm">Tax</span>Tool
+          </h1>
+          <div className="ctt-tagline">UK Tax Calculator &amp; Visualiser</div>
         </Navbar.Brand>
         <Form.Check
           type="switch"

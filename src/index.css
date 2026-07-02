@@ -1,13 +1,465 @@
+/* CoolTaxTool — "modern ledger" visual system.
+   Space Grotesk carries the wordmark and headings; IBM Plex Sans (with
+   tabular numerals) carries the body and every figure. Semantic colour is
+   reserved for money: vermilion for what you pay, green for what you keep. */
+@import "@fontsource/space-grotesk/500.css";
+@import "@fontsource/space-grotesk/700.css";
+@import "@fontsource/ibm-plex-sans/400.css";
+@import "@fontsource/ibm-plex-sans/500.css";
+@import "@fontsource/ibm-plex-sans/600.css";
+
+:root {
+  --font-display: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
+  --font-body: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  --ultramarine: #2c46d8;
+  --vermilion: #d64a2e;
+
+  --radius: 14px;
+  --radius-sm: 9px;
+}
+
+body.light {
+  --paper: #f3f5f9;
+  --panel: #ffffff;
+  --panel-raised: #ffffff;
+  --ink: #16213a;
+  --muted: #5a6478;
+  --line: #e2e6ef;
+  --line-strong: #c9cfdd;
+  --accent: var(--ultramarine);
+  --accent-ink: #ffffff;
+  --accent-soft: #eef1fd;
+  --brand-warm: var(--vermilion);
+
+  --pay-ink: #a03427;
+  --pay-tint: #faf0ed;
+  --pay-rule: #d64a2e;
+  --keep-ink: #1f7247;
+  --keep-tint: #edf6f0;
+  --keep-rule: #2b9962;
+
+  --shadow: 0 1px 2px rgba(22, 33, 58, 0.05), 0 8px 24px -12px rgba(22, 33, 58, 0.18);
+}
+
+body.dark {
+  --paper: #0e1422;
+  --panel: #161d2e;
+  --panel-raised: #1a2235;
+  --ink: #e9edf6;
+  --muted: #98a3ba;
+  --line: rgba(233, 237, 246, 0.1);
+  --line-strong: rgba(233, 237, 246, 0.22);
+  --accent: #8297ff;
+  --accent-ink: #0e1422;
+  --accent-soft: rgba(130, 151, 255, 0.14);
+  --brand-warm: #ff8266;
+
+  --pay-ink: #ff9d88;
+  --pay-tint: rgba(214, 74, 46, 0.13);
+  --pay-rule: #e06547;
+  --keep-ink: #86d6ab;
+  --keep-tint: rgba(43, 153, 98, 0.14);
+  --keep-rule: #2b9962;
+
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 28px -14px rgba(0, 0, 0, 0.6);
+}
+
+html,
 body {
+  height: 100%;
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--paper);
+  color: var(--ink);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+  font-family: "IBM Plex Mono", Menlo, Consolas, monospace;
+}
+
+h1, h2, h3, h4, h5, h6, .card-title, .navbar-brand, .btn {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+a {
+  color: var(--accent);
+}
+
+/* ---------- Header ---------- */
+
+.ctt-header {
+  padding: 1.4rem 0 0.6rem;
+}
+
+.ctt-wordmark {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.7rem, 4vw, 2.3rem);
+  letter-spacing: -0.03em;
+  line-height: 1;
+  margin: 0;
+  color: var(--ink);
+}
+
+.ctt-wordmark .warm {
+  color: var(--brand-warm);
+}
+
+.ctt-tagline {
+  color: var(--muted);
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-top: 0.35rem;
+}
+
+/* Accounting double rule under the header — the ledger's signature line */
+.ctt-header .container {
+  border-bottom: 1px solid var(--line-strong);
+  position: relative;
+  padding-bottom: 0.9rem;
+}
+
+.ctt-header .container::after {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: -4px;
+  border-bottom: 1px solid var(--line-strong);
+}
+
+/* ---------- Cards ---------- */
+
+.card {
+  background-color: var(--panel);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.card .card-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+/* ---------- Forms ---------- */
+
+.form-control,
+.form-select,
+.input-group-text {
+  background-color: var(--panel-raised);
+  color: var(--ink);
+  border-color: var(--line-strong);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+}
+
+.input-group .form-control,
+.input-group .btn,
+.input-group-text {
+  border-radius: var(--radius-sm);
+}
+
+.input-group > :first-child {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.input-group > :last-child:not(:first-child) {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.input-group-text {
+  color: var(--muted);
+  font-weight: 600;
+  min-width: 2.6em;
+  justify-content: center;
+}
+
+.form-control:focus,
+.form-select:focus {
+  background-color: var(--panel-raised);
+  color: var(--ink);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 0.2rem var(--accent-soft);
+}
+
+.form-control[type="number"] {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.form-label,
+.form-check-label {
+  color: var(--ink);
+}
+
+.form-check-label {
+  padding-left: 0.25rem;
+}
+
+/* the whole input column reads as one filing panel */
+.ctt-form {
+  background-color: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1rem 1.25rem 1.25rem;
+  margin-top: 1rem;
+}
+
+.ctt-form .card {
+  box-shadow: none;
+  background-color: var(--paper);
+}
+
+body.dark .ctt-form .card {
+  background-color: var(--panel-raised);
+}
+
+.form-select option {
+  background-color: var(--panel);
+  color: var(--ink);
+}
+
+.form-check-input {
+  background-color: var(--line-strong);
+  border-color: var(--line-strong);
+}
+
+.form-check-input:checked {
+  background-color: var(--accent);
+  border-color: var(--accent);
+}
+
+.form-check-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 0.2rem var(--accent-soft);
+}
+
+/* validation ticks are noise on a calculator — quiet them down.
+   (body-prefixed to outrank bootstrap.min.css, which loads after this file) */
+body .form-control.is-valid,
+body .was-validated .form-control:valid,
+body .form-select.is-valid {
+  border-color: var(--line-strong);
+  background-image: none;
+  padding-right: 0.75rem;
+}
+
+body .form-control.is-valid:focus,
+body .form-select.is-valid:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 0.2rem var(--accent-soft);
+}
+
+/* ---------- Buttons ---------- */
+
+.btn {
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+}
+
+.btn-primary {
+  --bs-btn-bg: var(--accent);
+  --bs-btn-border-color: var(--accent);
+  --bs-btn-color: var(--accent-ink);
+  --bs-btn-hover-bg: var(--accent);
+  --bs-btn-hover-border-color: var(--accent);
+  --bs-btn-hover-color: var(--accent-ink);
+  --bs-btn-active-bg: var(--accent);
+  --bs-btn-active-border-color: var(--accent);
+  --bs-btn-active-color: var(--accent-ink);
+  --bs-btn-focus-shadow-rgb: 44, 70, 216;
+}
+
+.btn-outline-primary,
+.btn-outline-secondary {
+  --bs-btn-color: var(--muted);
+  --bs-btn-border-color: var(--line-strong);
+  --bs-btn-bg: var(--panel);
+  --bs-btn-hover-bg: var(--accent-soft);
+  --bs-btn-hover-color: var(--accent);
+  --bs-btn-hover-border-color: var(--accent);
+  --bs-btn-active-bg: var(--accent);
+  --bs-btn-active-color: var(--accent-ink);
+  --bs-btn-active-border-color: var(--accent);
+}
+
+.btn-group .btn {
+  font-size: 0.85rem;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---------- Tables ---------- */
+
+.table {
+  --bs-table-bg: transparent;
+  --bs-table-color: var(--ink);
+  --bs-table-border-color: var(--line);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  margin-bottom: 0.75rem;
+}
+
+.table > :not(caption) > * > * {
+  background-color: transparent;
+  color: inherit;
+  border-bottom-color: var(--line);
+  padding-top: 0.45rem;
+  padding-bottom: 0.45rem;
+}
+
+/* number inputs inside tables (PAYE planner) need room for a month's pay */
+td .form-control[type="number"] {
+  min-width: 6.5rem;
+}
+
+/* Ledger panels: the pay / keep statements */
+.ledger-panel {
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--line-strong);
+  padding: 0.35rem 0.75rem 0.25rem;
+  margin-bottom: 0.9rem;
+}
+
+.ledger-panel.ledger-pay {
+  background-color: var(--pay-tint);
+  border-left-color: var(--pay-rule);
+}
+
+.ledger-panel.ledger-keep {
+  background-color: var(--keep-tint);
+  border-left-color: var(--keep-rule);
+}
+
+.ledger-pay .table,
+.ledger-pay th,
+.ledger-keep .table,
+.ledger-keep th {
+  color: var(--ink);
+}
+
+.ledger-pay thead th,
+.ledger-pay thead td {
+  color: var(--pay-ink);
+}
+
+.ledger-keep thead th,
+.ledger-keep thead td {
+  color: var(--keep-ink);
+}
+
+.ledger-panel thead th {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  border-bottom: none;
+}
+
+/* the accountant's double rule under a grand total */
+.ledger-panel thead td {
+  font-size: 1.05rem;
+  font-weight: 700;
+  border-bottom: 3px double currentColor !important;
+}
+
+.ledger-panel tbody tr:last-child > * {
+  border-bottom: none;
+}
+
+.ledger-panel .table {
+  margin-bottom: 0.25rem;
+}
+
+/* ---------- Alerts ---------- */
+
+.alert {
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+}
+
+.alert-info {
+  background-color: var(--accent-soft);
+  color: var(--ink);
+  border-color: transparent;
+}
+
+.alert-warning {
+  background-color: var(--pay-tint);
+  color: var(--ink);
+  border-color: var(--pay-rule);
+}
+
+body.dark .alert-warning,
+body.dark .alert-info {
+  color: var(--ink);
+}
+
+/* ---------- Popovers (info bubbles) ---------- */
+
+.popover {
+  background-color: var(--panel-raised);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+  color: var(--ink);
+}
+
+.popover-header {
+  background-color: transparent;
+  color: var(--ink);
+  font-family: var(--font-display);
+  border-bottom-color: var(--line);
+}
+
+.popover-body {
+  color: var(--muted);
+}
+
+/* ---------- Footer ---------- */
+
+footer {
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.82rem;
+  padding: 1.2rem 0 0.4rem;
+  margin-top: 2rem;
+}
+
+footer a {
+  color: var(--accent);
+}
+
+/* ---------- Motion & a11y ---------- */
+
+.card,
+.btn,
+.form-control,
+.form-check-input {
+  transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
 }

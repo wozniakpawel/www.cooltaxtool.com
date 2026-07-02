@@ -116,7 +116,7 @@ interface UserMenuProps {
 export function UserMenu({ onUserInputsChange }: UserMenuProps) {
     return (
         <>
-            <Container>
+            <Container className="ctt-form">
                 <Formik
                     validationSchema={schema}
                     initialValues={defaultInputs}
