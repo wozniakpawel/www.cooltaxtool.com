@@ -23,6 +23,13 @@ const schema = yup.object().shape({
     annualGrossSalary: requiredPositiveNumber,
     annualGrossBonus: requiredPositiveNumber,
     annualGrossDividends: requiredPositiveNumber,
+    dbMemberContribution: requiredPositiveNumber
+        .max(30, "Must be less than or equal to 30."),
+    dbAccrualDenominator: yup.number()
+        .typeError("Must be a number.")
+        .min(1, "Must be at least 1.")
+        .max(200, "Must be less than or equal to 200.")
+        .required("Field required."),
     pensionContributions: yup.object().shape({
         autoEnrolment: requiredPositiveNumber
             .max(30, "Must be less than or equal to 30."),
@@ -59,6 +66,9 @@ export const defaultInputs: TaxInputs = {
     autoEnrolmentAsSalarySacrifice: true,
     autoEnrolmentOnQualifyingEarnings: false,
     employerNISavingsToPension: false,
+    dbPensionEnabled: false,
+    dbMemberContribution: 0,
+    dbAccrualDenominator: 57,
     taxReliefAtSource: true,
     pensionEnabled: false,
     studentLoanEnabled: false,
@@ -89,6 +99,8 @@ const UseEffectWrapper = ({ onUserInputsChange }: UseEffectWrapperProps) => {
         parsedValues.annualGrossSalary = Number(parsedValues.annualGrossSalary) * (parsedValues.workingDaysPerWeek / 5);
         parsedValues.annualGrossBonus = Number(parsedValues.annualGrossBonus);
         parsedValues.annualGrossDividends = Number(parsedValues.annualGrossDividends);
+        parsedValues.dbMemberContribution = Number(parsedValues.dbMemberContribution);
+        parsedValues.dbAccrualDenominator = Number(parsedValues.dbAccrualDenominator);
         parsedValues.annualGrossIncomeRange = Number(parsedValues.annualGrossIncomeRange);
         parsedValues.pensionContributions = {
             ...parsedValues.pensionContributions,
@@ -403,6 +415,67 @@ export function UserMenu({ onUserInputsChange }: UserMenuProps) {
                                                         checked={values.taxReliefAtSource}
                                                         onChange={handleInputChange}
                                                     />
+
+                                                    <hr />
+
+                                                    <Form.Check
+                                                        type="switch"
+                                                        id="dbPensionEnabled"
+                                                        label={<>Defined benefit scheme <InfoPopover {...explanations.dbPensionEnabled} /></>}
+                                                        name="dbPensionEnabled"
+                                                        checked={values.dbPensionEnabled}
+                                                        onChange={handleInputChange}
+                                                    />
+                                                    <Collapse in={values.dbPensionEnabled}>
+                                                        <div>
+                                                            <Form.Group as={Row} controlId="dbMemberContribution">
+                                                                <Form.Label column>Member Contribution <InfoPopover {...explanations.dbMemberContribution} /></Form.Label>
+                                                                <Col>
+                                                                    <InputGroup hasValidation>
+                                                                        <InputGroup.Text>%</InputGroup.Text>
+                                                                        <Form.Control
+                                                                            type="number"
+                                                                            inputMode="decimal"
+                                                                            name="dbMemberContribution"
+                                                                            value={values.dbMemberContribution}
+                                                                            onChange={handleInputChange}
+                                                                            isValid={!errors.dbMemberContribution}
+                                                                            isInvalid={!!errors.dbMemberContribution}
+                                                                            min={0}
+                                                                            max={30}
+                                                                            step={0.1}
+                                                                        />
+                                                                        <Form.Control.Feedback type="invalid">
+                                                                            {errors.dbMemberContribution}
+                                                                        </Form.Control.Feedback>
+                                                                    </InputGroup>
+                                                                </Col>
+                                                            </Form.Group>
+                                                            <Form.Group as={Row} controlId="dbAccrualDenominator">
+                                                                <Form.Label column>Accrual Rate <InfoPopover {...explanations.dbAccrualDenominator} /></Form.Label>
+                                                                <Col>
+                                                                    <InputGroup hasValidation>
+                                                                        <InputGroup.Text>1 /</InputGroup.Text>
+                                                                        <Form.Control
+                                                                            type="number"
+                                                                            inputMode="numeric"
+                                                                            name="dbAccrualDenominator"
+                                                                            value={values.dbAccrualDenominator}
+                                                                            onChange={handleInputChange}
+                                                                            isValid={!errors.dbAccrualDenominator}
+                                                                            isInvalid={!!errors.dbAccrualDenominator}
+                                                                            min={1}
+                                                                            max={200}
+                                                                            step={1}
+                                                                        />
+                                                                        <Form.Control.Feedback type="invalid">
+                                                                            {errors.dbAccrualDenominator}
+                                                                        </Form.Control.Feedback>
+                                                                    </InputGroup>
+                                                                </Col>
+                                                            </Form.Group>
+                                                        </div>
+                                                    </Collapse>
                                                 </div>
                                             </Collapse>
                                         </Card.Body>

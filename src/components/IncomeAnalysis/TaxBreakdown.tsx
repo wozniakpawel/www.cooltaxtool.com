@@ -114,6 +114,13 @@ const TaxBreakdown = (props: TaxBreakdownProps) => {
             </thead>
             <tbody>
               {renderSingleValue(<>Take Home Pay <InfoPopover {...explanations.result_takeHomePay} /></>, results.takeHomePay)}
+              {results.dbPension.accrued > 0 && (
+                <>
+                  {results.dbPension.memberContribution > 0 &&
+                    renderSingleValue(<>DB Member Contribution <InfoPopover {...explanations.dbMemberContribution} /></>, results.dbPension.memberContribution)}
+                  {renderSingleValue(<>DB Pension Accrued /yr <InfoPopover {...explanations.dbAccrualDenominator} /></>, results.dbPension.accrued)}
+                </>
+              )}
               {renderBreakDown(<>Pension Pot <InfoPopover {...explanations.result_pensionPot} /></>, results.pensionPot)}
               {results.childBenefits.total > 0 && renderBreakDown(<>Child Benefits <InfoPopover {...explanations.result_childBenefits} /></>, results.childBenefits)}
             </tbody>

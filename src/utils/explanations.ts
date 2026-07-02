@@ -49,6 +49,21 @@ const explanations: Record<string, { title: string; content: string }> = {
     content:
       "When you sacrifice salary, your employer saves the employer National Insurance they would have paid on that amount (15% for 2025/26). Some employers pass some or all of this saving into your pension as an extra contribution. Enable this if your employer contributes their full NI saving — it's added to your pension pot on top of the sacrificed amount.",
   },
+  dbPensionEnabled: {
+    title: "Defined Benefit Scheme",
+    content:
+      "Defined benefit (final salary or career average) schemes pay a guaranteed annual pension rather than building a pot — common in the public sector (NHS, Teachers', LGPS, Civil Service). Your contributions are taken under a 'net pay arrangement': deducted from gross pay before income tax, so you get full marginal-rate relief automatically, but unlike salary sacrifice they do not reduce National Insurance. Career-average revaluation and lump sums are not modelled.",
+  },
+  dbMemberContribution: {
+    title: "DB Member Contribution",
+    content:
+      "The percentage of your salary you pay into the defined benefit scheme (public sector schemes typically use tiered rates between about 5% and 12% depending on salary — enter your tier's rate). Deducted before income tax (full marginal relief), but still subject to National Insurance.",
+  },
+  dbAccrualDenominator: {
+    title: "Accrual Rate",
+    content:
+      "How much annual pension you earn per year of service, as a fraction of your pensionable salary. Examples: 1/49 for LGPS, 1/54 for the 2015 NHS scheme, 1/57 for Teachers' career-average. For the pension annual allowance, defined benefit growth is valued at 16x the pension accrued in the year.",
+  },
   autoEnrolmentOnQualifyingEarnings: {
     title: "On Qualifying Earnings",
     content:

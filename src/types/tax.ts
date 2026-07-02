@@ -133,6 +133,9 @@ export interface TaxInputs {
   autoEnrolmentAsSalarySacrifice: boolean;
   autoEnrolmentOnQualifyingEarnings: boolean; // AE % applies to qualifying earnings band vs full pay
   employerNISavingsToPension: boolean; // employer passes NI saved on sacrificed salary into the pension
+  dbPensionEnabled: boolean; // defined benefit scheme section
+  dbMemberContribution: number; // % of gross salary, net pay arrangement (reduces tax, not NI)
+  dbAccrualDenominator: number; // annual pension accrued = salary / N
   taxReliefAtSource: boolean;
   pensionEnabled: boolean;
   studentLoanEnabled: boolean;
@@ -156,6 +159,11 @@ export interface PensionAllowanceResult {
   exceeded: boolean;
 }
 
+export interface DBPensionResult {
+  accrued: number; // annual pension earned this year (salary / accrual denominator)
+  memberContribution: number; // gross member contribution deducted from pay
+}
+
 export interface TaxCalculationResult {
   annualGrossIncome: CalculationResult;
   adjustedNetIncome: number;
@@ -172,5 +180,6 @@ export interface TaxCalculationResult {
   takeHomePay: number;
   pensionPot: CalculationResult;
   pensionAnnualAllowance: PensionAllowanceResult;
+  dbPension: DBPensionResult;
   totalYouKeep: number;
 }

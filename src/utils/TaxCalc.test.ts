@@ -410,6 +410,9 @@ describe('calculateTaxes', () => {
     autoEnrolmentAsSalarySacrifice: true,
     autoEnrolmentOnQualifyingEarnings: false,
     employerNISavingsToPension: false,
+    dbPensionEnabled: false,
+    dbMemberContribution: 0,
+    dbAccrualDenominator: 57,
     taxReliefAtSource: true,
     pensionEnabled: false,
     studentLoanEnabled: false,
@@ -622,6 +625,52 @@ describe('calculateTaxes', () => {
     it('should respect noNI', () => {
       const result = calculateTaxes({ ...baseInputs, annualGrossSalary: 50000, selfEmployed: true, noNI: true });
       expect(result.employeeNI.total).toBe(0);
+    });
+  });
+
+  describe('defined benefit pension', () => {
+    it('should give tax relief but not NI relief on member contributions', () => {
+      const withDB = calculateTaxes({
+        ...baseInputs,
+        pensionEnabled: true,
+        dbPensionEnabled: true,
+        dbMemberContribution: 6.5,
+        dbAccrualDenominator: 57,
+      });
+      const withoutDB = calculateTaxes(baseInputs);
+
+      // £3,250 member contribution: taxable = 50,000 - 3,250 - 12,570 = 34,180
+      expect(withDB.incomeTax.total).toBe(6836);
+      // NI is unchanged — net pay arrangement gives no NI saving
+      expect(withDB.employeeNI.total).toBe(withoutDB.employeeNI.total);
+      expect(withDB.employeeNI.total).toBeCloseTo(2994.40, 2);
+      // Take-home falls by the contribution net of the 20% tax saving
+      expect(withoutDB.takeHomePay - withDB.takeHomePay).toBeCloseTo(3250 - 650, 2);
+      // Accrued pension and annual allowance usage (x16 factor)
+      expect(withDB.dbPension.memberContribution).toBeCloseTo(3250, 2);
+      expect(withDB.dbPension.accrued).toBeCloseTo(877.19, 2);
+      expect(withDB.pensionAnnualAllowance.used).toBeCloseTo(14035.09, 2);
+    });
+
+    it('should feed DB growth into the annual allowance taper for high earners', () => {
+      const result = calculateTaxes({
+        ...baseInputs,
+        annualGrossSalary: 300000,
+        pensionEnabled: true,
+        dbPensionEnabled: true,
+        dbMemberContribution: 10,
+        dbAccrualDenominator: 49,
+      });
+
+      expect(result.pensionAnnualAllowance.tapered).toBe(true);
+      expect(result.pensionAnnualAllowance.allowance).toBeLessThan(60000);
+    });
+
+    it('should be inert when the DB switch is off', () => {
+      const result = calculateTaxes({ ...baseInputs, pensionEnabled: true, dbMemberContribution: 10 });
+      expect(result.dbPension.accrued).toBe(0);
+      expect(result.dbPension.memberContribution).toBe(0);
+      expect(result.pensionAnnualAllowance.used).toBe(result.pensionPot.total);
     });
   });
 

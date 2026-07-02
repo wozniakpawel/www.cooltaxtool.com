@@ -56,7 +56,7 @@ const TaxYearOverview = (props: TaxYearOverviewProps) => {
     );
 
     const data: ChartDataPoint[] = grossIncomes.map((grossIncome) => {
-      const { annualGrossIncome, taxAllowance, incomeTax, dividendTax, employeeNI, employerNI, pensionPot, studentLoanRepayments, childBenefits, pensionAnnualAllowance: _pensionAnnualAllowance, ...rest } =
+      const { annualGrossIncome, taxAllowance, incomeTax, dividendTax, employeeNI, employerNI, pensionPot, studentLoanRepayments, childBenefits, pensionAnnualAllowance: _pensionAnnualAllowance, dbPension: _dbPension, ...rest } =
         calculateTaxes({
           ...props.inputs,
           annualGrossBonus: 0,

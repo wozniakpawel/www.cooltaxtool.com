@@ -541,10 +541,20 @@ export function calculateTaxes(inputs: TaxInputs): TaxCalculationResult {
 
     const dividends = inputs.annualGrossDividends;
 
+    // Defined benefit pension: member contributions are a net pay arrangement —
+    // they reduce taxable income (full marginal relief automatically) but not
+    // NI-able pay, and they buy an annual pension (salary / accrual denominator)
+    // rather than going into a pot
+    const dbEnabled = inputs.pensionEnabled && inputs.dbPensionEnabled;
+    const dbContribution = dbEnabled ? inputs.annualGrossSalary * (inputs.dbMemberContribution / 100) : 0;
+    const dbAccrued = dbEnabled && inputs.dbAccrualDenominator > 0
+        ? inputs.annualGrossSalary / inputs.dbAccrualDenominator
+        : 0;
+
     // Calculate adjusted net income (employer contributions never came out of
     // your income). Dividends count towards ANI, which drives the personal
-    // allowance taper and HICBC.
-    const individualPensionContributions = pensionPot.total - autoEnrolmentEmployerContribution;
+    // allowance taper and HICBC. DB member contributions are a gross deduction.
+    const individualPensionContributions = pensionPot.total - autoEnrolmentEmployerContribution + dbContribution;
     const adjustedNetIncome = Math.max(0, annualGrossIncome.total + dividends - individualPensionContributions);
 
     // Split ANI into its earnings part and its dividend part: pension deductions
@@ -598,7 +608,8 @@ export function calculateTaxes(inputs: TaxInputs): TaxCalculationResult {
     // Pension amounts the employee pays out of remaining income (not already deducted via salary sacrifice)
     const netPensionDeductions =
         (autoEnrolmentAsSalarySacrifice ? 0 : autoEnrolmentContribution)
-        + pensionContributions.personal;
+        + pensionContributions.personal
+        + dbContribution;
 
     // Dividends land in your pocket too; combinedTaxes already includes the
     // dividend tax, so adding gross dividends here nets them off correctly
@@ -608,15 +619,20 @@ export function calculateTaxes(inputs: TaxInputs): TaxCalculationResult {
     // Pension annual allowance check.
     // Threshold income: income net of gross personal contributions (salary
     // sacrificed after July 2015 must be added back, so sacrifice is not deducted).
-    // Adjusted income: income plus all employer pension contributions.
-    const thresholdIncome = Math.max(0, annualGrossIncome.total + dividends - grossedPersonalContribution);
-    const adjustedIncome = annualGrossIncome.total + dividends + autoEnrolmentEmployerContribution + employerNISaving;
+    // Adjusted income: income plus all employer pension contributions; for DB
+    // that is the pension input amount (accrued x 16) less the member's own
+    // contribution — i.e. the employer-funded growth.
+    const dbPensionInputAmount = dbAccrued * 16;
+    const thresholdIncome = Math.max(0, annualGrossIncome.total + dividends - grossedPersonalContribution - dbContribution);
+    const adjustedIncome = annualGrossIncome.total + dividends + autoEnrolmentEmployerContribution + employerNISaving
+        + Math.max(0, dbPensionInputAmount - dbContribution);
     const allowance = calculatePensionAnnualAllowance(thresholdIncome, adjustedIncome, constants.pensionAnnualAllowance);
+    const annualAllowanceUsed = pensionPot.total + dbPensionInputAmount;
     const pensionAnnualAllowance: PensionAllowanceResult = {
         allowance,
-        used: pensionPot.total,
+        used: annualAllowanceUsed,
         tapered: allowance < constants.pensionAnnualAllowance.standard,
-        exceeded: pensionPot.total > allowance,
+        exceeded: annualAllowanceUsed > allowance,
     };
 
     return {
@@ -635,6 +651,7 @@ export function calculateTaxes(inputs: TaxInputs): TaxCalculationResult {
         takeHomePay,
         pensionPot,
         pensionAnnualAllowance,
+        dbPension: { accrued: dbAccrued, memberContribution: dbContribution },
         totalYouKeep,
     };
 }
