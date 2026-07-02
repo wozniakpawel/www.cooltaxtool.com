@@ -36,7 +36,7 @@ const plotSettings: PlotSetting[] = [
   { key: "childBenefits", color: "#35cc71", label: "Child Benefits", dashed: true },
   { key: "takeHomePay", color: "#2ecc71", label: "Take Home Pay" },
   { key: "pensionPot", color: "#27ae60", label: "Pension Pot" },
-  { key: "yourMoney", color: "#16a085", label: "Your money (Pension Pot + Take Home)" },
+  { key: "totalYouKeep", color: "#16a085", label: "Total you keep (Pension Pot + Take Home)" },
   { key: "marginalCombinedTaxRate", color: "#f1c40f", label: "Marginal Combined Tax Rate", dashed: true, percentOnly: true },
 ];
 

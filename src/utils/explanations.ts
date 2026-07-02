@@ -139,7 +139,7 @@ const explanations: Record<string, { title: string; content: string }> = {
     content:
       "Repayments deducted from your pay for outstanding student loans. You repay 9% of income above your plan's threshold (6% for postgraduate loans). If you have multiple plans, the highest threshold is used for non-postgraduate plans and repayments are split proportionally.",
   },
-  result_yourMoney: {
+  result_totalYouKeep: {
     title: "Total You Keep",
     content:
       "The total value you receive from your employment: Take Home Pay (cash in your bank) + Pension Pot (saved for retirement) + Child Benefits (if claimed). This represents the full financial value of your employment package.",

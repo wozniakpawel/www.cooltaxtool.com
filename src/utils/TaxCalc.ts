@@ -289,7 +289,19 @@ export function calculatePensionAnnualAllowance(
     return Math.max(minimum, standard - reduction);
 }
 
-// Top-level function to calculate taxes
+// Top-level function to calculate taxes.
+//
+// Naming convention, mapped to ONS/HMRC terminology:
+// - annualGrossIncome ≈ gross earnings: remuneration from employment (salary +
+//   bonus) before any deductions. Will diverge from "income" once other income
+//   sources (dividends, rental) are added.
+// - adjustedNetIncome = adjusted net income per HMRC: gross income minus the
+//   gross pension contributions paid by the individual (employer contributions
+//   never count). Used for the personal allowance taper and HICBC.
+// - takeHomePay = gross earnings minus employee deductions (Income Tax,
+//   employee NI, student loan, pension contributions) — ONS "take-home pay".
+// - totalYouKeep = takeHomePay + pension pot + child benefit. No ONS
+//   equivalent; tool-specific measure of the full value received.
 export function calculateTaxes(inputs: TaxInputs): TaxCalculationResult {
     const constants = taxYears[inputs.taxYear];
     if (!constants) {
@@ -399,7 +411,7 @@ export function calculateTaxes(inputs: TaxInputs): TaxCalculationResult {
         + pensionContributions.personal;
 
     const takeHomePay = Math.max(0, incomeAfterSalarySacrifice - netPensionDeductions - combinedTaxes);
-    const yourMoney = pensionPot.total + takeHomePay + childBenefitsResult.childBenefits.total;
+    const totalYouKeep = pensionPot.total + takeHomePay + childBenefitsResult.childBenefits.total;
 
     // Pension annual allowance check.
     // Threshold income: income net of gross personal contributions (salary
@@ -430,6 +442,6 @@ export function calculateTaxes(inputs: TaxInputs): TaxCalculationResult {
         takeHomePay,
         pensionPot,
         pensionAnnualAllowance,
-        yourMoney,
+        totalYouKeep,
     };
 }

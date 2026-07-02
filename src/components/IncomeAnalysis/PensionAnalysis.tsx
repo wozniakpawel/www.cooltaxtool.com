@@ -123,7 +123,7 @@ const AutoEnrolmentSweep = (props: PensionAnalysisProps) => {
         autoEnrolment,
         takeHomePay: taxes.takeHomePay,
         pensionPot: taxes.pensionPot.total,
-        yourMoney: taxes.yourMoney,
+        totalYouKeep: taxes.totalYouKeep,
       };
     });
   }, [props.inputs]);
@@ -164,7 +164,7 @@ const AutoEnrolmentSweep = (props: PensionAnalysisProps) => {
     },
     {
       name: "Total you keep",
-      data: chartData.map((d) => ({ x: d.autoEnrolment, y: d.yourMoney })),
+      data: chartData.map((d) => ({ x: d.autoEnrolment, y: d.totalYouKeep })),
     },
   ];
 

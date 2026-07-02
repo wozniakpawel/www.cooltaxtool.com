@@ -90,9 +90,9 @@ const TaxBreakdown = (props: TaxBreakdownProps) => {
         <Table size="sm" variant="success" style={{ color: "#000" }}>
           <thead>
             <tr>
-              <th>Total you keep <InfoPopover {...explanations.result_yourMoney} /></th>
+              <th>Total you keep <InfoPopover {...explanations.result_totalYouKeep} /></th>
               <td style={{ fontWeight: "bold" }} className="text-end">
-                {formatCurrencyPrecise(results.yourMoney / divisor)}
+                {formatCurrencyPrecise(results.totalYouKeep / divisor)}
               </td>
             </tr>
           </thead>

@@ -153,5 +153,5 @@ export interface TaxCalculationResult {
   takeHomePay: number;
   pensionPot: CalculationResult;
   pensionAnnualAllowance: PensionAllowanceResult;
-  yourMoney: number;
+  totalYouKeep: number;
 }
