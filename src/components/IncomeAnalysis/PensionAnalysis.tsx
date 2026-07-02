@@ -99,6 +99,84 @@ const TaxSavingsVsPensionContributions = (props: PensionAnalysisProps) => {
         type="line"
         height={350}
       />
+      <AutoEnrolmentSweep {...props} />
+    </>
+  );
+};
+
+// How take-home pay and the pension pot change as the auto enrolment
+// employee percentage varies across its allowed range
+const AutoEnrolmentSweep = (props: PensionAnalysisProps) => {
+  const chartData = useMemo(() => {
+    const percentages = Array.from({ length: 61 }, (_, i) => i * 0.5); // 0% to 30%
+
+    return percentages.map((autoEnrolment) => {
+      const taxes = calculateTaxes({
+        ...props.inputs,
+        pensionContributions: {
+          ...props.inputs.pensionContributions,
+          autoEnrolment,
+        },
+      });
+
+      return {
+        autoEnrolment,
+        takeHomePay: taxes.takeHomePay,
+        pensionPot: taxes.pensionPot.total,
+        yourMoney: taxes.yourMoney,
+      };
+    });
+  }, [props.inputs]);
+
+  const options = useMemo(() => {
+    const baseOptions = getApexChartOptions(props.theme);
+
+    return {
+      ...baseOptions,
+      colors: ["#e67e22", "#9b59b6", "#2ecc71"],
+      xaxis: {
+        ...baseOptions.xaxis,
+        labels: {
+          ...baseOptions.xaxis?.labels,
+          formatter: (val: string) => formatPercent(Number(val)),
+        },
+      },
+      tooltip: {
+        ...baseOptions.tooltip,
+        x: {
+          formatter: (value: number) => `Auto Enrolment: ${formatPercent(value)}`,
+        },
+        y: {
+          formatter: (value: number) => formatCurrency(value),
+        },
+      },
+    };
+  }, [props.theme]);
+
+  const series = [
+    {
+      name: "Take Home Pay",
+      data: chartData.map((d) => ({ x: d.autoEnrolment, y: d.takeHomePay })),
+    },
+    {
+      name: "Pension Pot",
+      data: chartData.map((d) => ({ x: d.autoEnrolment, y: d.pensionPot })),
+    },
+    {
+      name: "Total you keep",
+      data: chartData.map((d) => ({ x: d.autoEnrolment, y: d.yourMoney })),
+    },
+  ];
+
+  return (
+    <>
+      <h5 className="text-center mt-3">Take Home Pay and Pension Pot vs Auto Enrolment %</h5>
+      <Chart
+        options={options}
+        series={series}
+        type="line"
+        height={350}
+      />
     </>
   );
 };
