@@ -22,7 +22,6 @@ const testInputs: TaxInputs = {
   autoEnrolmentOnQualifyingEarnings: false,
   employerNISavingsToPension: false,
   taxReliefAtSource: true,
-  incomeAnalysis: false,
   pensionEnabled: false,
   studentLoanEnabled: false,
 };

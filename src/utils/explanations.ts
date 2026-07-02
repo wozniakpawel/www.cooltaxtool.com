@@ -79,11 +79,6 @@ const explanations: Record<string, { title: string; content: string }> = {
     content:
       "Relief at source is a method of providing tax relief on personal pension contributions. Under this system, your pension provider claims basic rate tax relief (currently 20%) from HMRC on your behalf and adds it to your pension pot. For example, if you contribute £80, the provider claims £20 from HMRC, making the gross contribution £100. Higher and additional rate taxpayers can claim further relief through self-assessment. Note: if you do not pay Income Tax (e.g. because your income is below the Personal Allowance), relief at source only applies to the first £2,880 of contributions per tax year (grossed up to £3,600).",
   },
-  incomeAnalysis: {
-    title: "View Mode",
-    content:
-      "Income Explorer shows how taxes change across a range of incomes as line charts. My Taxes lets you enter a specific salary and bonus to see a detailed breakdown of your taxes, take-home pay, and pension, plus a chart showing how pension contributions affect your tax savings.",
-  },
   annualGrossSalary: {
     title: "Annual Gross Salary",
     content:

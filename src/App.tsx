@@ -3,6 +3,7 @@ import { Container, Row, Col, ButtonGroup, Button } from "react-bootstrap";
 import { defaultInputs, UserMenu } from "./components/UserMenu";
 import TaxYearOverview from "./components/TaxYearOverview";
 import IncomeAnalysis from "./components/IncomeAnalysis";
+import PayePlanner from "./components/PayePlanner";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import type { TaxInputs } from "./types/tax";
@@ -16,8 +17,17 @@ const getInitialTheme = () => {
   return window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 };
 
+type View = "myTaxes" | "explorer" | "paye";
+
+const views: { key: View; label: string }[] = [
+  { key: "myTaxes", label: "My Taxes" },
+  { key: "explorer", label: "Income Explorer" },
+  { key: "paye", label: "PAYE Planner" },
+];
+
 function App() {
   const [userInputs, setUserInputs] = useState(defaultInputs);
+  const [view, setView] = useState<View>("myTaxes");
   const [theme, setTheme] = useState(getInitialTheme);
 
   useEffect(() => {
@@ -30,7 +40,7 @@ function App() {
   }
 
   const handleUserInputsChange = useCallback((inputs: TaxInputs) => {
-    setUserInputs(prev => ({ ...inputs, incomeAnalysis: prev.incomeAnalysis }));
+    setUserInputs(inputs);
   }, []);
 
   return (
@@ -43,25 +53,19 @@ function App() {
           </Col>
           <Col xs={12} lg={6} className="pt-3">
             <ButtonGroup className="mb-3">
-              <Button
-                variant={userInputs.incomeAnalysis ? 'primary' : 'outline-primary'}
-                onClick={() => setUserInputs({ ...userInputs, incomeAnalysis: true })}
-              >
-                My Taxes
-              </Button>
-              <Button
-                variant={!userInputs.incomeAnalysis ? 'primary' : 'outline-primary'}
-                onClick={() => setUserInputs({ ...userInputs, incomeAnalysis: false })}
-              >
-                Income Explorer
-              </Button>
+              {views.map(({ key, label }) => (
+                <Button
+                  key={key}
+                  variant={view === key ? "primary" : "outline-primary"}
+                  onClick={() => setView(key)}
+                >
+                  {label}
+                </Button>
+              ))}
             </ButtonGroup>
-            {userInputs.incomeAnalysis && (
-              <IncomeAnalysis inputs={userInputs} theme={theme} />
-            )}
-            {!userInputs.incomeAnalysis && (
-              <TaxYearOverview inputs={userInputs} theme={theme} />
-            )}
+            {view === "myTaxes" && <IncomeAnalysis inputs={userInputs} theme={theme} />}
+            {view === "explorer" && <TaxYearOverview inputs={userInputs} theme={theme} />}
+            {view === "paye" && <PayePlanner inputs={userInputs} theme={theme} />}
           </Col>
         </Row>
       </Container>

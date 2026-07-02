@@ -246,6 +246,81 @@ export function calculateStudentLoanRepayments(
     };
 }
 
+// Monthly (per-pay-period) National Insurance, as PAYE actually charges it:
+// the annual thresholds are divided by 12 and applied to each month's pay in
+// isolation, so an uneven month (e.g. a bonus) changes what you actually pay
+// compared to an annual-basis estimate.
+export function calculateMonthlyNI(
+    monthlyPay: number,
+    constants: TaxYearConstants,
+    employer: boolean,
+    noNI: boolean
+): CalculationResult {
+    if (noNI) return { total: 0, breakdown: [] };
+
+    const { primaryThreshold, secondaryThreshold, upperEarningsLimit, employeeRates, employerRates } = constants.nationalInsurance;
+    const firstThreshold = (employer ? secondaryThreshold : primaryThreshold) / 12;
+    const upperLimit = upperEarningsLimit / 12;
+    const rates = employer ? employerRates : employeeRates;
+
+    let remaining = Math.max(0, monthlyPay - firstThreshold);
+    let total = 0;
+    const breakdown: BreakdownItem[] = [];
+
+    const inFirstBand = Math.min(remaining, upperLimit - firstThreshold);
+    if (inFirstBand > 0) {
+        const ni = inFirstBand * rates[0];
+        total += ni;
+        remaining -= inFirstBand;
+        breakdown.push({ rate: rates[0], amount: ni });
+    }
+    if (remaining > 0) {
+        const ni = remaining * rates[1];
+        total += ni;
+        breakdown.push({ rate: rates[1], amount: ni });
+    }
+
+    return { total, breakdown };
+}
+
+// Monthly (per-pay-period) student loan repayments: annual thresholds divided
+// by 12, each month's repayment floored to the pound, matching payroll practice
+export function calculateMonthlySL(
+    monthlyPay: number,
+    studentLoanPlans: StudentLoanPlan[],
+    constants: TaxYearConstants
+): CalculationResult {
+    const { defaultRate, postgradRate, thresholds } = constants.studentLoan;
+    let total = 0;
+    const breakdown: BreakdownItem[] = [];
+
+    if (studentLoanPlans.length === 0) return { total, breakdown };
+
+    const nonPostgradPlans = studentLoanPlans
+        .filter((plan): plan is Exclude<StudentLoanPlan, 'postgrad'> => plan !== "postgrad")
+        .sort((a, b) => thresholds[a] - thresholds[b]);
+
+    // Repayments are based on the plan with the lowest threshold, same as annually
+    if (nonPostgradPlans.length > 0) {
+        const plan = nonPostgradPlans[0];
+        const monthlyThreshold = thresholds[plan] / 12;
+        const amount = monthlyPay <= monthlyThreshold ? 0 : Math.floor((monthlyPay - monthlyThreshold) * defaultRate);
+        total += amount;
+        const option = studentLoanOptions.find(option => option.plan === plan);
+        breakdown.push({ rate: option?.label ?? plan, amount });
+    }
+
+    if (studentLoanPlans.includes("postgrad")) {
+        const monthlyThreshold = thresholds["postgrad"] / 12;
+        const amount = monthlyPay <= monthlyThreshold ? 0 : Math.floor((monthlyPay - monthlyThreshold) * postgradRate);
+        total += amount;
+        const option = studentLoanOptions.find(option => option.plan === "postgrad");
+        breakdown.push({ rate: option?.label ?? "Postgraduate", amount });
+    }
+
+    return { total, breakdown };
+}
+
 export interface ChildBenefitsResult {
     childBenefits: CalculationResult;
     hicbc: number;

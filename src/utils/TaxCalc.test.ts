@@ -5,6 +5,8 @@ import {
   calculateNationalInsurance,
   calculateStudentLoanRepayments,
   calculateChildBenefits,
+  calculateMonthlyNI,
+  calculateMonthlySL,
   calculatePensionAnnualAllowance,
   calculateDividendTax,
   grossManualPensionContributions,
@@ -192,6 +194,55 @@ describe('calculateStudentLoanRepayments', () => {
   });
 });
 
+describe('calculateMonthlyNI', () => {
+  it('should charge employee NI on monthly pay with monthly thresholds', () => {
+    // (3,000 - 12,570/12) * 8% = (3,000 - 1,047.50) * 0.08 = £156.20
+    const result = calculateMonthlyNI(3000, constants, false, false);
+    expect(result.total).toBeCloseTo(156.20, 2);
+  });
+
+  it('should apply the upper earnings limit per month', () => {
+    // UEL/12 = 4,189.17: (4,189.17 - 1,047.50) * 8% + (27,000 - 4,189.17) * 2% ≈ £707.55
+    const result = calculateMonthlyNI(27000, constants, false, false);
+    expect(result.total).toBeCloseTo(707.55, 2);
+  });
+
+  it('should return zero when noNI is set', () => {
+    expect(calculateMonthlyNI(3000, constants, false, true).total).toBe(0);
+  });
+
+  it('demonstrates that a bonus month costs less NI monthly than on an annual basis', () => {
+    // 36,000 salary paid evenly + 24,000 bonus in one month
+    const evenMonths = 11 * calculateMonthlyNI(3000, constants, false, false).total;
+    const bonusMonth = calculateMonthlyNI(27000, constants, false, false).total;
+    const monthlyBasisTotal = evenMonths + bonusMonth;
+    expect(monthlyBasisTotal).toBeCloseTo(2425.75, 1);
+
+    // Annual basis on the same £60,000: 37,700 * 8% + 9,730 * 2% = £3,210.60
+    const annualBasis = calculateNationalInsurance(60000, constants, false, false);
+    expect(annualBasis.total).toBeCloseTo(3210.60, 2);
+    expect(monthlyBasisTotal).toBeLessThan(annualBasis.total);
+  });
+});
+
+describe('calculateMonthlySL', () => {
+  it('should charge plan 2 repayments on monthly pay with monthly threshold', () => {
+    // threshold 27,295/12 = 2,274.58 → floor((3,000 - 2,274.58) * 0.09) = £65
+    const result = calculateMonthlySL(3000, ['plan2'], constants);
+    expect(result.total).toBe(65);
+  });
+
+  it('should return zero below the monthly threshold', () => {
+    expect(calculateMonthlySL(2000, ['plan2'], constants).total).toBe(0);
+  });
+
+  it('should stack postgrad on top', () => {
+    // plan2: floor(725.42 * 0.09) = 65; postgrad: floor((3,000 - 1,750) * 0.06) = 75
+    const result = calculateMonthlySL(3000, ['plan2', 'postgrad'], constants);
+    expect(result.total).toBe(65 + 75);
+  });
+});
+
 describe('calculateChildBenefits', () => {
   const selfInput = { mode: 'self' as const, numberOfChildren: 2 };
   const partnerInput = { mode: 'partner' as const, numberOfChildren: 2 };
@@ -347,7 +398,6 @@ describe('calculateTaxes', () => {
     autoEnrolmentOnQualifyingEarnings: false,
     employerNISavingsToPension: false,
     taxReliefAtSource: true,
-    incomeAnalysis: false,
     pensionEnabled: false,
     studentLoanEnabled: false,
   };

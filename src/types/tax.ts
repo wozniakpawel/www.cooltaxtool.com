@@ -134,7 +134,6 @@ export interface TaxInputs {
   autoEnrolmentOnQualifyingEarnings: boolean; // AE % applies to qualifying earnings band vs full pay
   employerNISavingsToPension: boolean; // employer passes NI saved on sacrificed salary into the pension
   taxReliefAtSource: boolean;
-  incomeAnalysis: boolean;
   pensionEnabled: boolean;
   studentLoanEnabled: boolean;
 }

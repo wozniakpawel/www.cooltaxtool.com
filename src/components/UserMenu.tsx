@@ -60,7 +60,6 @@ export const defaultInputs: TaxInputs = {
     autoEnrolmentOnQualifyingEarnings: false,
     employerNISavingsToPension: false,
     taxReliefAtSource: true,
-    incomeAnalysis: true,
     pensionEnabled: false,
     studentLoanEnabled: false,
 };
