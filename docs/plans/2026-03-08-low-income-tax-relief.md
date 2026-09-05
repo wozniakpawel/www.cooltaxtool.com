@@ -1,5 +1,3 @@
-> Superseded on 5 September 2026: pension relief is limited by relevant earnings, not by whether someone pays Income Tax. See [current methodology](../tax-methodology.md).
-
 # Low Income Pension Tax Relief Implementation Plan
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.

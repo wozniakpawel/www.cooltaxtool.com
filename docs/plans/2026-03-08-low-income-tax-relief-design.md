@@ -1,5 +1,3 @@
-> Superseded on 5 September 2026: pension relief is limited by relevant earnings, not by whether someone pays Income Tax. See [current methodology](../tax-methodology.md).
-
 # Low Income Tax Relief Design
 
 **Issue:** #55 — Corner case: tax relief for low incomes
