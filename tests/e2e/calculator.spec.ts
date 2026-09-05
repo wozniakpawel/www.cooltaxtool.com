@@ -143,7 +143,8 @@ test('salary and pension charts paint lines, expose the breakdown and preserve p
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto('/');
   await page.getByRole('button', { name: 'Income explorer', exact: true }).click();
-  const mainChart = page.locator('.apexcharts-canvas').first();
+  // ApexCharts replaces its canvas during redraws; the React-owned wrapper stays attached.
+  const mainChart = page.getByRole('img', { name: /^Income and pension line chart\./ });
   for (const mode of ['Explore salary', 'Explore pension']) {
     await page.getByRole('button', { name: mode, exact: true }).click();
     await expect(mainChart.locator('.apexcharts-line')).toHaveCount(4);
@@ -154,14 +155,11 @@ test('salary and pension charts paint lines, expose the breakdown and preserve p
     await mainChart.scrollIntoViewIfNeeded();
     await page.mouse.move(0, 0);
     const visible = await mainChart.screenshot();
-    await mainChart
-      .locator('.apexcharts-line')
-      .evaluateAll((es) => es.forEach((e) => e.setAttribute('opacity', '0')));
-    const hidden = await mainChart.screenshot();
+    const hidden = await mainChart.screenshot({
+      // Apply to replacement paths too, and automatically restore after the screenshot.
+      style: '.apexcharts-line { opacity: 0 !important; }',
+    });
     expect(visible.equals(hidden)).toBe(false);
-    await mainChart
-      .locator('.apexcharts-line')
-      .evaluateAll((es) => es.forEach((e) => e.removeAttribute('opacity')));
     await page.getByLabel('Show tax & pension breakdown', { exact: true }).check();
     await expect(mainChart.locator('.apexcharts-line')).toHaveCount(11);
     await expect(mainChart.locator('.apexcharts-legend')).toContainText('Your National Insurance');
