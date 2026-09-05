@@ -3,22 +3,27 @@
   "name": "UK Tax Calculator and Visualiser",
   "icons": [
     {
-      "src": "favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
+      "src": "favicon.ico?v=2",
+      "sizes": "16x16 24x24 32x32 48x48 64x64",
       "type": "image/x-icon"
     },
     {
-      "src": "logo128.png",
+      "src": "logo128.png?v=2",
       "type": "image/png",
       "sizes": "128x128"
     },
     {
-      "src": "logo512.png",
+      "src": "logo192.png?v=2",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "logo512.png?v=2",
       "type": "image/png",
       "sizes": "512x512"
     },
     {
-      "src": "favicon.svg",
+      "src": "favicon.svg?v=2",
       "sizes": "any",
       "type": "image/svg+xml"
     }
