@@ -5,7 +5,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 3000,
-    open: true,
+    open: false,
   },
   build: {
     outDir: 'build',
@@ -15,6 +15,6 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/setupTests.tsx',
     css: true,
-    exclude: ['**/node_modules/**', '.worktrees/**'],
+    exclude: ['**/node_modules/**', '.worktrees/**', 'tests/e2e/**'],
   },
 });

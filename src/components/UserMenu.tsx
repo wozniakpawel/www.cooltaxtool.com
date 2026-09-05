@@ -1,588 +1,465 @@
-import { useEffect, ChangeEvent } from 'react';
-import { Formik, useFormikContext } from 'formik';
-import NumberOfChildrenSelector from './NumberOfChildrenSelector';
-import InfoPopover from './InfoPopover';
-import explanations from '../utils/explanations';
-import * as yup from 'yup';
+import { useState, useEffect, useId, type ReactNode } from 'react';
 import { taxYears } from '../utils/TaxYears';
 import { studentLoanOptions } from '../utils/studentLoanOptions';
-import {
-    Container, Card, Row, Col, Form, Alert,
-    InputGroup, Collapse, Button,
-} from 'react-bootstrap';
-import type { TaxInputs, StudentLoanPlan } from '../types/tax';
+import { defaultInputs } from '../utils/defaultInputs';
+import type { TaxInputs } from '../types/tax';
+export { defaultInputs } from '../utils/defaultInputs';
 
-const taxYearOptions = Object.keys(taxYears);
-
-const requiredPositiveNumber = yup.number()
-    .typeError("Must be a number.")
-    .min(0, "Must be a positive number.")
-    .required("Field required.");
-
-const schema = yup.object().shape({
-    annualGrossSalary: requiredPositiveNumber,
-    annualGrossBonus: requiredPositiveNumber,
-    annualGrossDividends: requiredPositiveNumber,
-    dbMemberContribution: requiredPositiveNumber
-        .max(30, "Must be less than or equal to 30."),
-    dbAccrualDenominator: yup.number()
-        .typeError("Must be a number.")
-        .min(1, "Must be at least 1.")
-        .max(200, "Must be less than or equal to 200.")
-        .required("Field required."),
-    pensionContributions: yup.object().shape({
-        autoEnrolment: requiredPositiveNumber
-            .max(30, "Must be less than or equal to 30."),
-        autoEnrolmentEmployer: requiredPositiveNumber
-            .max(100, "Must be less than or equal to 100."),
-        salarySacrifice: requiredPositiveNumber,
-        personal: requiredPositiveNumber,
-    }),
-});
-
-export const defaultInputs: TaxInputs = {
-    taxYear: taxYearOptions[0],
-    studentLoan: [] as StudentLoanPlan[],
-    annualGrossSalary: 0,
-    annualGrossBonus: 0,
-    annualGrossDividends: 0,
-    annualGrossIncomeRange: 150000,
-    workingDaysPerWeek: 5,
-    selfEmployed: false,
-    residentInScotland: false,
-    noNI: false,
-    blind: false,
-    childBenefits: {
-        mode: 'off',
-        numberOfChildren: 1,
-    },
-    pensionContributions: {
-        autoEnrolment: 0,
-        autoEnrolmentEmployer: 0,
-        salarySacrifice: 0,
-        personal: 0,
-    },
-    salarySacrificeIsPercentage: false,
-    autoEnrolmentAsSalarySacrifice: true,
-    autoEnrolmentOnQualifyingEarnings: false,
-    employerNISavingsToPension: false,
-    dbPensionEnabled: false,
-    dbMemberContribution: 0,
-    dbAccrualDenominator: 57,
-    taxReliefAtSource: true,
-    pensionEnabled: false,
-    studentLoanEnabled: false,
-};
-
-const hasEmptyString = (obj: Record<string, unknown>): boolean => {
-    return Object.values(obj).some(value => {
-        if (typeof value === 'string') {
-            return value === '';
-        } else if (typeof value === 'object' && value !== null) {
-            return hasEmptyString(value as Record<string, unknown>);
-        }
-        return false;
-    });
-};
-
-interface UseEffectWrapperProps {
-    onUserInputsChange: (inputs: TaxInputs) => void;
-}
-
-const UseEffectWrapper = ({ onUserInputsChange }: UseEffectWrapperProps) => {
-    const { values, errors } = useFormikContext<TaxInputs>();
-
-    const parseValuesToFloats = (values: TaxInputs): TaxInputs => {
-        const parsedValues = { ...values };
-        parsedValues.workingDaysPerWeek = Number(parsedValues.workingDaysPerWeek);
-        // Scale the full-time salary down (or up) for part-time working patterns
-        parsedValues.annualGrossSalary = Number(parsedValues.annualGrossSalary) * (parsedValues.workingDaysPerWeek / 5);
-        parsedValues.annualGrossBonus = Number(parsedValues.annualGrossBonus);
-        parsedValues.annualGrossDividends = Number(parsedValues.annualGrossDividends);
-        parsedValues.dbMemberContribution = Number(parsedValues.dbMemberContribution);
-        parsedValues.dbAccrualDenominator = Number(parsedValues.dbAccrualDenominator);
-        parsedValues.annualGrossIncomeRange = Number(parsedValues.annualGrossIncomeRange);
-        parsedValues.pensionContributions = {
-            ...parsedValues.pensionContributions,
-            autoEnrolment: Number(parsedValues.pensionContributions.autoEnrolment),
-            autoEnrolmentEmployer: Number(parsedValues.pensionContributions.autoEnrolmentEmployer),
-            salarySacrifice: Number(parsedValues.pensionContributions.salarySacrifice),
-            personal: Number(parsedValues.pensionContributions.personal),
-        };
-        return parsedValues;
-    };
-
-    useEffect(() => {
-        if (Object.keys(errors).length === 0 && !hasEmptyString(values as unknown as Record<string, unknown>)) {
-            onUserInputsChange(parseValuesToFloats(values));
-        }
-    }, [values, errors, onUserInputsChange]);
-
-    return null;
-};
-
-interface UserMenuProps {
-    onUserInputsChange: (inputs: TaxInputs) => void;
-}
-
-export function UserMenu({ onUserInputsChange }: UserMenuProps) {
+export function NumberField({
+  label,
+  value,
+  onChange,
+  unit = '£',
+  max = 10000000,
+  min = 0,
+  step = 'any',
+  hint,
+}: {
+  label: string;
+  value: number;
+  onChange: (value: number) => void;
+  unit?: string;
+  max?: number;
+  min?: number;
+  step?: string;
+  hint?: string;
+}) {
+  const id = useId();
+  const [draft, setDraft] = useState(String(value));
+  useEffect(() => setDraft(String(value)), [value]);
+  const isValidValue = (text: string) => {
+    const n = Number(text);
+    const stepPosition = (n - min) / Number(step);
     return (
-        <>
-            <Container className="ctt-form">
-                <Formik
-                    validationSchema={schema}
-                    initialValues={defaultInputs}
-                    onSubmit={() => { }}
-                >
-
-                    {({ setFieldValue, values, errors }) => {
-                        const handleInputChange = (event: ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string; value?: string; type: string; checked?: boolean } }) => {
-                            const { name, value, type, checked } = event.target as HTMLInputElement;
-                            if (name === "studentLoan") {
-                                const newStudentLoan = checked
-                                    ? [...values.studentLoan, value]
-                                    : values.studentLoan.filter(plan => plan !== value);
-                                setFieldValue(name, newStudentLoan, true);
-                            } else {
-                                const newValue = type === "checkbox" ? checked : value;
-                                setFieldValue(name, newValue, true);
-                            }
-                        };
-
-                        return (
-                            <>
-                                <Form noValidate>
-
-                                    <Form.Group as={Row} controlId="taxYear" className="mt-2">
-                                        <Form.Label column>Tax Year <InfoPopover {...explanations.taxYear} /></Form.Label>
-                                        <Col>
-                                            <Form.Control as="select" name="taxYear" value={values.taxYear} onChange={handleInputChange}>
-                                                {taxYearOptions.map(year => (
-                                                    <option key={year} value={year}>{year}</option>
-                                                ))}
-                                            </Form.Control>
-                                        </Col>
-                                        {
-                                            (values.taxYear === '2022/23') &&
-                                            <Alert key="warning" variant="warning">
-                                                Warning: NI calculations for the 2022/23 tax year might not be accurate due to the varying rates and thresholds. Effective rates and thresholds are being used to estimate the Employer and Employee NI contributions.
-                                            </Alert>
-                                        }
-                                    </Form.Group>
-
-                                    <Form.Group>
-                                        <Form.Check
-                                            type="switch"
-                                            id="selfEmployed"
-                                            label={<>Self-employed <InfoPopover {...explanations.selfEmployed} /></>}
-                                            name="selfEmployed"
-                                            checked={values.selfEmployed}
-                                            onChange={handleInputChange}
-                                        />
-                                        <Form.Check
-                                            type="switch"
-                                            id="residentInScotland"
-                                            label={<>Resident in Scotland <InfoPopover {...explanations.residentInScotland} /></>}
-                                            name="residentInScotland"
-                                            checked={values.residentInScotland}
-                                            onChange={handleInputChange}
-                                        />
-                                        <Form.Check
-                                            type="switch"
-                                            id="noNI"
-                                            label={<>Exclude NI <InfoPopover {...explanations.noNI} /></>}
-                                            name="noNI"
-                                            checked={values.noNI}
-                                            onChange={handleInputChange}
-                                        />
-                                        <Form.Check
-                                            type="switch"
-                                            id="blind"
-                                            label={<>Blind <InfoPopover {...explanations.blind} /></>}
-                                            name="blind"
-                                            checked={values.blind}
-                                            onChange={handleInputChange}
-                                        />
-                                        <Form.Group as={Row} controlId="childBenefits.mode" className="mt-1 mb-1">
-                                            <Form.Label column>Child Benefits <InfoPopover {...explanations.childBenefits} /></Form.Label>
-                                            <Col>
-                                                <Form.Select
-                                                    name="childBenefits.mode"
-                                                    value={values.childBenefits.mode}
-                                                    onChange={handleInputChange}
-                                                >
-                                                    <option value="off">Off</option>
-                                                    <option value="self">I receive Child Benefits</option>
-                                                    <option value="partner">My partner receives Child Benefits</option>
-                                                </Form.Select>
-                                            </Col>
-                                        </Form.Group>
-                                        {values.childBenefits.mode !== 'off' &&
-                                            <>
-                                                <NumberOfChildrenSelector
-                                                    setFieldValue={setFieldValue}
-                                                    values={values}
-                                                />
-                                                <InfoPopover {...explanations.numberOfChildren} />
-                                            </>
-                                        }
-                                    </Form.Group>
-
-                                    <Card className="mt-2">
-                                        <Card.Body>
-                                            <Card.Title>
-                                                <Form.Check
-                                                    type="switch"
-                                                    id="studentLoanEnabled"
-                                                    label={<>Student Loans <InfoPopover {...explanations.studentLoan} /></>}
-                                                    name="studentLoanEnabled"
-                                                    checked={values.studentLoanEnabled}
-                                                    onChange={handleInputChange}
-                                                    className="d-inline-flex align-items-center"
-                                                />
-                                            </Card.Title>
-                                            <Collapse in={values.studentLoanEnabled}>
-                                                <div>
-                                                    <Form.Group as={Row} controlId="studentLoan">
-                                                        {/* <Form.Label column>Student Loans</Form.Label> */}
-                                                        <Col>
-                                                            {studentLoanOptions.map(option => (
-                                                                <Form.Check
-                                                                    key={option.plan}
-                                                                    type="checkbox"
-                                                                    label={option.label}
-                                                                    name="studentLoan"
-                                                                    value={option.plan}
-                                                                    checked={values.studentLoan.includes(option.plan)}
-                                                                    onChange={handleInputChange}
-                                                                />
-                                                            ))}
-                                                        </Col>
-                                                    </Form.Group>
-                                                </div>
-                                            </Collapse>
-                                        </Card.Body>
-                                    </Card>
-
-                                    <Card className="mt-2">
-                                        <Card.Body>
-                                            <Card.Title>
-                                                <Form.Check
-                                                    type="switch"
-                                                    id="pensionEnabled"
-                                                    label={<>Pension</>}
-                                                    name="pensionEnabled"
-                                                    checked={values.pensionEnabled}
-                                                    onChange={handleInputChange}
-                                                    className="d-inline-flex align-items-center"
-                                                />
-                                            </Card.Title>
-                                            <Collapse in={values.pensionEnabled}>
-                                                <div>
-                                                    <Form.Group as={Row} controlId="pensionContributions.autoEnrolment">
-                                                        <Form.Label column>Auto Enrolment (you) <InfoPopover {...explanations.autoEnrolment} /></Form.Label>
-                                                        <Col>
-                                                            <InputGroup hasValidation>
-                                                                <InputGroup.Text>%</InputGroup.Text>
-                                                                <Form.Control
-                                                                    type="number"
-                                                                    inputMode="decimal"
-                                                                    name="pensionContributions.autoEnrolment"
-                                                                    value={values.pensionContributions.autoEnrolment}
-                                                                    onChange={handleInputChange}
-                                                                    isValid={!errors.pensionContributions?.autoEnrolment}
-                                                                    isInvalid={!!errors.pensionContributions?.autoEnrolment}
-                                                                    min={0}
-                                                                    max={30}
-                                                                    step={0.1}
-                                                                />
-                                                                <Form.Control.Feedback type="invalid">
-                                                                    {errors.pensionContributions?.autoEnrolment}
-                                                                </Form.Control.Feedback>
-                                                            </InputGroup>
-                                                        </Col>
-                                                    </Form.Group>
-                                                    <Form.Group as={Row} controlId="pensionContributions.autoEnrolmentEmployer">
-                                                        <Form.Label column>Auto Enrolment (employer) <InfoPopover {...explanations.autoEnrolmentEmployer} /></Form.Label>
-                                                        <Col>
-                                                            <InputGroup hasValidation>
-                                                                <InputGroup.Text>%</InputGroup.Text>
-                                                                <Form.Control
-                                                                    type="number"
-                                                                    inputMode="decimal"
-                                                                    name="pensionContributions.autoEnrolmentEmployer"
-                                                                    value={values.pensionContributions.autoEnrolmentEmployer}
-                                                                    onChange={handleInputChange}
-                                                                    isValid={!errors.pensionContributions?.autoEnrolmentEmployer}
-                                                                    isInvalid={!!errors.pensionContributions?.autoEnrolmentEmployer}
-                                                                    min={0}
-                                                                    max={100}
-                                                                    step={0.1}
-                                                                />
-                                                                <Form.Control.Feedback type="invalid">
-                                                                    {errors.pensionContributions?.autoEnrolmentEmployer}
-                                                                </Form.Control.Feedback>
-                                                            </InputGroup>
-                                                        </Col>
-                                                    </Form.Group>
-                                                    <Form.Check
-                                                        type="switch"
-                                                        id="autoEnrolmentAsSalarySacrifice"
-                                                        label={<>As salary sacrifice <InfoPopover {...explanations.autoEnrolmentAsSalarySacrifice} /></>}
-                                                        name="autoEnrolmentAsSalarySacrifice"
-                                                        checked={values.autoEnrolmentAsSalarySacrifice}
-                                                        onChange={handleInputChange}
-                                                    />
-                                                    <Form.Check
-                                                        type="switch"
-                                                        id="autoEnrolmentOnQualifyingEarnings"
-                                                        label={<>On qualifying earnings <InfoPopover {...explanations.autoEnrolmentOnQualifyingEarnings} /></>}
-                                                        name="autoEnrolmentOnQualifyingEarnings"
-                                                        checked={values.autoEnrolmentOnQualifyingEarnings}
-                                                        onChange={handleInputChange}
-                                                    />
-
-                                                    <hr />
-
-                                                    <Form.Group as={Row} controlId="pensionContributions.salarySacrifice">
-                                                        <Form.Label column>Salary/Bonus Sacrifice <InfoPopover {...explanations.salarySacrifice} /></Form.Label>
-                                                        <Col>
-                                                            <InputGroup hasValidation>
-                                                                <Button
-                                                                    variant="outline-secondary"
-                                                                    aria-label="Switch between pounds and percentage"
-                                                                    title="Switch between £ and %"
-                                                                    onClick={() => setFieldValue('salarySacrificeIsPercentage', !values.salarySacrificeIsPercentage, true)}
-                                                                >
-                                                                    {values.salarySacrificeIsPercentage ? '%' : '£'}
-                                                                </Button>
-                                                                <Form.Control
-                                                                    type="number"
-                                                                    inputMode="decimal"
-                                                                    name="pensionContributions.salarySacrifice"
-                                                                    value={values.pensionContributions.salarySacrifice}
-                                                                    onChange={handleInputChange}
-                                                                    isValid={!errors.pensionContributions?.salarySacrifice}
-                                                                    isInvalid={!!errors.pensionContributions?.salarySacrifice}
-                                                                    min={0}
-                                                                    max={values.salarySacrificeIsPercentage ? 100 : undefined}
-                                                                    step={values.salarySacrificeIsPercentage ? 1 : 100}
-                                                                />
-                                                                <Form.Control.Feedback type="invalid">
-                                                                    {errors.pensionContributions?.salarySacrifice}
-                                                                </Form.Control.Feedback>
-                                                            </InputGroup>
-                                                        </Col>
-                                                    </Form.Group>
-                                                    <Form.Check
-                                                        type="switch"
-                                                        id="employerNISavingsToPension"
-                                                        label={<>Employer NI savings to pension <InfoPopover {...explanations.employerNISavingsToPension} /></>}
-                                                        name="employerNISavingsToPension"
-                                                        checked={values.employerNISavingsToPension}
-                                                        onChange={handleInputChange}
-                                                    />
-
-                                                    <hr />
-
-                                                    <Form.Group as={Row} controlId="pensionContributions.personal">
-                                                        <Form.Label column>Personal Contributions <InfoPopover {...explanations.personalContributions} /></Form.Label>
-                                                        <Col>
-                                                            <InputGroup hasValidation>
-                                                                <InputGroup.Text>£</InputGroup.Text>
-                                                                <Form.Control
-                                                                    type="number"
-                                                                    inputMode="decimal"
-                                                                    name="pensionContributions.personal"
-                                                                    value={values.pensionContributions.personal}
-                                                                    onChange={handleInputChange}
-                                                                    isValid={!errors.pensionContributions?.personal}
-                                                                    isInvalid={!!errors.pensionContributions?.personal}
-                                                                    min={0}
-                                                                    step={100}
-                                                                />
-                                                                <Form.Control.Feedback type="invalid">
-                                                                    {errors.pensionContributions?.personal}
-                                                                </Form.Control.Feedback>
-                                                            </InputGroup>
-                                                        </Col>
-                                                    </Form.Group>
-                                                    <Form.Check
-                                                        type="switch"
-                                                        id="taxReliefAtSource"
-                                                        label={<>Relief at source <InfoPopover {...explanations.taxReliefAtSource} /></>}
-                                                        name="taxReliefAtSource"
-                                                        checked={values.taxReliefAtSource}
-                                                        onChange={handleInputChange}
-                                                    />
-
-                                                    <hr />
-
-                                                    <Form.Check
-                                                        type="switch"
-                                                        id="dbPensionEnabled"
-                                                        label={<>Defined benefit scheme <InfoPopover {...explanations.dbPensionEnabled} /></>}
-                                                        name="dbPensionEnabled"
-                                                        checked={values.dbPensionEnabled}
-                                                        onChange={handleInputChange}
-                                                    />
-                                                    <Collapse in={values.dbPensionEnabled}>
-                                                        <div>
-                                                            <Form.Group as={Row} controlId="dbMemberContribution">
-                                                                <Form.Label column>Member Contribution <InfoPopover {...explanations.dbMemberContribution} /></Form.Label>
-                                                                <Col>
-                                                                    <InputGroup hasValidation>
-                                                                        <InputGroup.Text>%</InputGroup.Text>
-                                                                        <Form.Control
-                                                                            type="number"
-                                                                            inputMode="decimal"
-                                                                            name="dbMemberContribution"
-                                                                            value={values.dbMemberContribution}
-                                                                            onChange={handleInputChange}
-                                                                            isValid={!errors.dbMemberContribution}
-                                                                            isInvalid={!!errors.dbMemberContribution}
-                                                                            min={0}
-                                                                            max={30}
-                                                                            step={0.1}
-                                                                        />
-                                                                        <Form.Control.Feedback type="invalid">
-                                                                            {errors.dbMemberContribution}
-                                                                        </Form.Control.Feedback>
-                                                                    </InputGroup>
-                                                                </Col>
-                                                            </Form.Group>
-                                                            <Form.Group as={Row} controlId="dbAccrualDenominator">
-                                                                <Form.Label column>Accrual Rate <InfoPopover {...explanations.dbAccrualDenominator} /></Form.Label>
-                                                                <Col>
-                                                                    <InputGroup hasValidation>
-                                                                        <InputGroup.Text>1 /</InputGroup.Text>
-                                                                        <Form.Control
-                                                                            type="number"
-                                                                            inputMode="numeric"
-                                                                            name="dbAccrualDenominator"
-                                                                            value={values.dbAccrualDenominator}
-                                                                            onChange={handleInputChange}
-                                                                            isValid={!errors.dbAccrualDenominator}
-                                                                            isInvalid={!!errors.dbAccrualDenominator}
-                                                                            min={1}
-                                                                            max={200}
-                                                                            step={1}
-                                                                        />
-                                                                        <Form.Control.Feedback type="invalid">
-                                                                            {errors.dbAccrualDenominator}
-                                                                        </Form.Control.Feedback>
-                                                                    </InputGroup>
-                                                                </Col>
-                                                            </Form.Group>
-                                                        </div>
-                                                    </Collapse>
-                                                </div>
-                                            </Collapse>
-                                        </Card.Body>
-                                    </Card>
-
-                                    <Form.Group as={Row} controlId="annualGrossSalary" className="mt-2">
-                                        <Form.Label column>Annual Gross Salary <InfoPopover {...explanations.annualGrossSalary} /></Form.Label>
-                                        <Col>
-                                            <InputGroup hasValidation>
-                                                <InputGroup.Text>£</InputGroup.Text>
-                                                <Form.Control
-                                                    type="number"
-                                                    inputMode="decimal"
-                                                    name="annualGrossSalary"
-                                                    value={values.annualGrossSalary}
-                                                    onChange={handleInputChange}
-                                                    isValid={!errors.annualGrossSalary}
-                                                    isInvalid={!!errors.annualGrossSalary}
-                                                    min={0}
-                                                    step={1000}
-                                                />
-                                                <Form.Control.Feedback type="invalid">
-                                                    {errors.annualGrossSalary}
-                                                </Form.Control.Feedback>
-                                            </InputGroup>
-                                        </Col>
-                                    </Form.Group>
-
-                                    <Form.Group as={Row} controlId="workingDaysPerWeek" className="mt-2">
-                                        <Form.Label column>Working Days per Week <InfoPopover {...explanations.workingDaysPerWeek} /></Form.Label>
-                                        <Col>
-                                            <Form.Select
-                                                name="workingDaysPerWeek"
-                                                value={values.workingDaysPerWeek}
-                                                onChange={handleInputChange}
-                                            >
-                                                {[5, 4, 3, 2, 1].map(days => (
-                                                    <option key={days} value={days}>
-                                                        {days === 5 ? '5 (full-time)' : days}
-                                                    </option>
-                                                ))}
-                                            </Form.Select>
-                                        </Col>
-                                    </Form.Group>
-
-                                    <Form.Group as={Row} controlId="annualGrossBonus" className="mt-2">
-                                        <Form.Label column>Annual Gross Bonus <InfoPopover {...explanations.annualGrossBonus} /></Form.Label>
-                                        <Col>
-                                            <InputGroup hasValidation>
-                                                <InputGroup.Text>£</InputGroup.Text>
-                                                <Form.Control
-                                                    type="number"
-                                                    inputMode="decimal"
-                                                    name="annualGrossBonus"
-                                                    value={values.annualGrossBonus}
-                                                    onChange={handleInputChange}
-                                                    isValid={!errors.annualGrossBonus}
-                                                    isInvalid={!!errors.annualGrossBonus}
-                                                    min={0}
-                                                    step={1000}
-                                                />
-                                                <Form.Control.Feedback type="invalid">
-                                                    {errors.annualGrossBonus}
-                                                </Form.Control.Feedback>
-                                            </InputGroup>
-                                        </Col>
-                                    </Form.Group>
-
-                                    <Form.Group as={Row} controlId="annualGrossDividends" className="mt-2">
-                                        <Form.Label column>Annual Gross Dividends <InfoPopover {...explanations.annualGrossDividends} /></Form.Label>
-                                        <Col>
-                                            <InputGroup hasValidation>
-                                                <InputGroup.Text>£</InputGroup.Text>
-                                                <Form.Control
-                                                    type="number"
-                                                    inputMode="decimal"
-                                                    name="annualGrossDividends"
-                                                    value={values.annualGrossDividends}
-                                                    onChange={handleInputChange}
-                                                    isValid={!errors.annualGrossDividends}
-                                                    isInvalid={!!errors.annualGrossDividends}
-                                                    min={0}
-                                                    step={500}
-                                                />
-                                                <Form.Control.Feedback type="invalid">
-                                                    {errors.annualGrossDividends}
-                                                </Form.Control.Feedback>
-                                            </InputGroup>
-                                        </Col>
-                                    </Form.Group>
-
-                                    <iframe
-                                        src="https://github.com/sponsors/wozniakpawel/button"
-                                        title="Sponsor wozniakpawel"
-                                        height="32"
-                                        width="114"
-                                        style={{ border: '0', borderRadius: "6px" }}
-                                        className="mt-2"
-                                    />
-
-                                </Form>
-                                <UseEffectWrapper onUserInputsChange={onUserInputsChange} />
-                            </>
-                        );
-                    }}
-                </Formik>
-            </Container>
-        </>
+      text !== '' &&
+      Number.isFinite(n) &&
+      n >= min &&
+      n <= max &&
+      (step === 'any' || Math.abs(stepPosition - Math.round(stepPosition)) < 1e-8)
     );
-};
+  };
+  const valid = isValidValue(draft);
+  return (
+    <div className="number-field">
+      <label htmlFor={id}>{label}</label>
+      <div className={`money-input ${valid ? '' : 'invalid'}`}>
+        <span aria-hidden="true">{unit}</span>
+        <input
+          id={id}
+          type="number"
+          inputMode="decimal"
+          min={min}
+          max={max}
+          step={step}
+          value={draft}
+          aria-invalid={!valid}
+          aria-describedby={`${id}-unit${hint || !valid ? ` ${id}-hint` : ''}`}
+          onChange={(e) => {
+            const text = e.target.value;
+            setDraft(text);
+            const n = Number(text);
+            if (isValidValue(text)) onChange(n);
+          }}
+        />
+      </div>
+      <span id={`${id}-unit`} className="visually-hidden">
+        {unit === '£'
+          ? 'Amount in British pounds.'
+          : unit === '%'
+            ? 'Percentage.'
+            : `Unit: ${unit}.`}
+      </span>
+      {(!valid || hint) && (
+        <small id={`${id}-hint`} className={!valid ? 'field-error' : ''}>
+          {!valid
+            ? `Enter a number from ${min} to ${max.toLocaleString('en-GB')}${step === 'any' ? '' : ` in steps of ${step}`}. Results use your last valid value.`
+            : hint}
+        </small>
+      )}
+    </div>
+  );
+}
+
+function Toggle({
+  label,
+  checked,
+  onChange,
+  hint,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  hint?: string;
+}) {
+  const id = useId();
+  return (
+    <div className="toggle-field">
+      <label htmlFor={id}>
+        <span>{label}</span>
+        <input
+          id={id}
+          type="checkbox"
+          role="switch"
+          checked={checked}
+          onChange={(e) => onChange(e.target.checked)}
+        />
+      </label>
+      {hint && <small>{hint}</small>}
+    </div>
+  );
+}
+
+function InputSection({
+  title,
+  count,
+  children,
+}: {
+  title: string;
+  count?: string;
+  children: ReactNode;
+}) {
+  return (
+    <details className="input-section">
+      <summary>
+        <span>{title}</span>
+        <span className="section-status">
+          {count}
+          <span className="chevron">⌄</span>
+        </span>
+      </summary>
+      <div className="section-content">{children}</div>
+    </details>
+  );
+}
+
+export function UserMenu({
+  onUserInputsChange,
+}: {
+  onUserInputsChange: (inputs: TaxInputs) => void;
+}) {
+  const [v, setV] = useState<TaxInputs>(defaultInputs);
+  useEffect(() => {
+    onUserInputsChange({
+      ...v,
+      annualGrossSalary: (v.annualGrossSalary * v.workingDaysPerWeek) / 5,
+    });
+  }, [v, onUserInputsChange]);
+  const set = <K extends keyof TaxInputs>(key: K, value: TaxInputs[K]) =>
+    setV((old) => ({ ...old, [key]: value }));
+  const pension = (key: keyof TaxInputs['pensionContributions'], value: number) =>
+    setV((old) => ({
+      ...old,
+      pensionContributions: { ...old.pensionContributions, [key]: value },
+    }));
+  const gross = (v.annualGrossSalary * v.workingDaysPerWeek) / 5 + v.annualGrossBonus;
+  return (
+    <aside className="input-panel" aria-label="Your calculator inputs">
+      <div className="input-heading">
+        <div>
+          <span className="eyebrow">LET’S START WITH YOU</span>
+          <h2>Your details</h2>
+        </div>
+        <button
+          className="text-button"
+          onClick={() => setV({ ...defaultInputs, annualGrossSalary: 0 })}
+        >
+          Reset
+        </button>
+      </div>
+      <form onSubmit={(e) => e.preventDefault()}>
+        <div className="primary-inputs">
+          <label htmlFor="taxYear">Tax Year</label>
+          <select id="taxYear" value={v.taxYear} onChange={(e) => set('taxYear', e.target.value)}>
+            {Object.keys(taxYears).map((year) => (
+              <option key={year}>{year}</option>
+            ))}
+          </select>
+          <label htmlFor="region">Where do you pay tax?</label>
+          <select
+            id="region"
+            value={v.residentInScotland ? 'scotland' : 'rest'}
+            onChange={(e) => set('residentInScotland', e.target.value === 'scotland')}
+          >
+            <option value="rest">England, Wales & Northern Ireland</option>
+            <option value="scotland">Scotland</option>
+          </select>
+          <label htmlFor="employment">Income type</label>
+          <select
+            id="employment"
+            value={v.selfEmployed ? 'self' : 'employed'}
+            onChange={(e) => set('selfEmployed', e.target.value === 'self')}
+          >
+            <option value="employed">Employed · salary</option>
+            <option value="self">Self-employed · trading profit</option>
+          </select>
+          <NumberField
+            label={
+              v.selfEmployed
+                ? 'Annual profit after business expenses'
+                : v.workingDaysPerWeek === 5
+                  ? 'Annual salary before tax'
+                  : 'Full-time equivalent annual salary'
+            }
+            value={v.annualGrossSalary}
+            onChange={(n) => set('annualGrossSalary', n)}
+          />
+          <div className="salary-presets" aria-label="Example annual salaries">
+            {[30000, 45000, 60000, 100000].map((n) => (
+              <button
+                type="button"
+                key={n}
+                className={v.annualGrossSalary === n ? 'selected' : ''}
+                onClick={() => set('annualGrossSalary', n)}
+              >
+                £{n / 1000}k
+              </button>
+            ))}
+          </div>
+          <p className="input-note">
+            Start with an example, then make it yours. Results update as you type.
+          </p>
+        </div>
+        <InputSection
+          title="Bonus, dividends & working days"
+          count={v.annualGrossBonus || v.annualGrossDividends ? 'Added' : 'Optional'}
+        >
+          <NumberField
+            label={v.selfEmployed ? 'Other trading profit' : 'Annual bonus'}
+            value={v.annualGrossBonus}
+            onChange={(n) => set('annualGrossBonus', n)}
+          />
+          <NumberField
+            label="Annual dividends"
+            value={v.annualGrossDividends}
+            onChange={(n) => set('annualGrossDividends', n)}
+            hint="Dividends outside an ISA. Enter the amount before tax."
+          />
+          <NumberField
+            label="Working days per week"
+            unit="days"
+            value={v.workingDaysPerWeek}
+            min={1}
+            max={5}
+            step="0.5"
+            onChange={(n) => set('workingDaysPerWeek', n)}
+            hint="Fewer than 5 days scales the full-time salary or profit above. Bonus and dividends stay as entered."
+          />
+        </InputSection>
+        <InputSection title="Pension contributions" count={v.pensionEnabled ? 'On' : 'Optional'}>
+          <Toggle
+            label="Include pension"
+            checked={v.pensionEnabled}
+            onChange={(b) => set('pensionEnabled', b)}
+          />
+          {v.pensionEnabled && (
+            <>
+              {!v.selfEmployed && (
+                <>
+                  <div className="field-grid">
+                    <NumberField
+                      label="Workplace · you"
+                      unit="%"
+                      max={30}
+                      value={v.pensionContributions.autoEnrolment}
+                      onChange={(n) => pension('autoEnrolment', n)}
+                    />
+                    <NumberField
+                      label="Workplace · employer"
+                      unit="%"
+                      max={100}
+                      value={v.pensionContributions.autoEnrolmentEmployer}
+                      onChange={(n) => pension('autoEnrolmentEmployer', n)}
+                    />
+                  </div>
+                  <Toggle
+                    label="Workplace pension is salary sacrifice"
+                    checked={v.autoEnrolmentAsSalarySacrifice}
+                    onChange={(b) => set('autoEnrolmentAsSalarySacrifice', b)}
+                    hint="Off means a net-pay scheme: income tax relief, but no NI saving. For relief at source, use the personal payment field below."
+                  />
+                  <Toggle
+                    label="Use qualifying earnings"
+                    checked={v.autoEnrolmentOnQualifyingEarnings}
+                    onChange={(b) => set('autoEnrolmentOnQualifyingEarnings', b)}
+                    hint="Off uses full pay after additional sacrifice. Check which basis your employer uses."
+                  />
+                  <Toggle
+                    label="Enter additional sacrifice as a %"
+                    checked={v.salarySacrificeIsPercentage}
+                    onChange={(b) => {
+                      setV((old) => ({
+                        ...old,
+                        salarySacrificeIsPercentage: b,
+                        pensionContributions: { ...old.pensionContributions, salarySacrifice: 0 },
+                      }));
+                    }}
+                  />
+                  <NumberField
+                    label="Additional salary sacrifice"
+                    unit={v.salarySacrificeIsPercentage ? '%' : '£'}
+                    max={v.salarySacrificeIsPercentage ? 100 : gross}
+                    value={v.pensionContributions.salarySacrifice}
+                    onChange={(n) => pension('salarySacrifice', n)}
+                  />
+                  <Toggle
+                    label="Employer adds its NI saving"
+                    checked={v.employerNISavingsToPension}
+                    onChange={(b) => set('employerNISavingsToPension', b)}
+                  />
+                </>
+              )}
+              {v.selfEmployed && (
+                <p className="input-note">
+                  Personal pensions reduce income tax, but not Class 4 NI. Workplace contributions
+                  and salary sacrifice do not apply here.
+                </p>
+              )}
+              <NumberField
+                label="Annual personal pension payment"
+                value={v.pensionContributions.personal}
+                onChange={(n) => pension('personal', n)}
+                hint="The amount you pay into a SIPP or relief-at-source workplace pension, before the provider adds relief."
+              />
+              <Toggle
+                label="Provider adds 20% tax relief"
+                checked={v.taxReliefAtSource}
+                onChange={(b) => set('taxReliefAtSource', b)}
+                hint="Off models a gross personal payment with relief claimed from HMRC."
+              />
+              {!v.selfEmployed && (
+                <details className="nested-details">
+                  <summary>Defined benefit / career average pension</summary>
+                  <Toggle
+                    label="Include defined benefit scheme"
+                    checked={v.dbPensionEnabled}
+                    onChange={(b) => set('dbPensionEnabled', b)}
+                  />
+                  {v.dbPensionEnabled && (
+                    <>
+                      <NumberField
+                        label="DB member contribution"
+                        unit="%"
+                        max={30}
+                        value={v.dbMemberContribution}
+                        onChange={(n) => set('dbMemberContribution', n)}
+                      />
+                      <NumberField
+                        label="Accrual denominator (1 / …)"
+                        unit="1 /"
+                        min={1}
+                        max={200}
+                        value={v.dbAccrualDenominator}
+                        onChange={(n) => set('dbAccrualDenominator', n)}
+                        hint="Simplified annual accrual on salary. Existing benefits and inflation adjustments are not modelled."
+                      />
+                    </>
+                  )}
+                </details>
+              )}
+            </>
+          )}
+        </InputSection>
+        <InputSection
+          title="Student loans"
+          count={v.studentLoanEnabled ? `${v.studentLoan.length} selected` : 'Optional'}
+        >
+          <Toggle
+            label="Include student loan repayments"
+            checked={v.studentLoanEnabled}
+            onChange={(b) => set('studentLoanEnabled', b)}
+          />
+          {v.studentLoanEnabled && (
+            <div className="loan-options">
+              {studentLoanOptions.map((option) => (
+                <label key={option.plan}>
+                  <input
+                    type="checkbox"
+                    checked={v.studentLoan.includes(option.plan)}
+                    disabled={
+                      !Number.isFinite(taxYears[v.taxYear].studentLoan.thresholds[option.plan])
+                    }
+                    onChange={(e) =>
+                      set(
+                        'studentLoan',
+                        e.target.checked
+                          ? [...v.studentLoan, option.plan]
+                          : v.studentLoan.filter((p) => p !== option.plan),
+                      )
+                    }
+                  />
+                  <span>
+                    {option.label}
+                    <small>
+                      {Number.isFinite(taxYears[v.taxYear].studentLoan.thresholds[option.plan])
+                        ? `Above £${taxYears[v.taxYear].studentLoan.thresholds[option.plan].toLocaleString('en-GB')} / year`
+                        : 'Not in repayment this tax year'}
+                    </small>
+                  </span>
+                </label>
+              ))}
+              <p className="input-note">
+                Multiple undergraduate loans share one 9% deduction. Postgraduate repayments add 6%.
+                Assumes your repayments have started and a balance remains.
+              </p>
+            </div>
+          )}
+        </InputSection>
+        <InputSection
+          title="Child Benefit & allowances"
+          count={v.childBenefits.mode !== 'off' || v.blind || v.noNI ? 'Added' : 'Optional'}
+        >
+          <label htmlFor="child-benefit">Who receives Child Benefit?</label>
+          <select
+            id="child-benefit"
+            value={v.childBenefits.mode}
+            onChange={(e) =>
+              set('childBenefits', {
+                ...v.childBenefits,
+                mode: e.target.value as TaxInputs['childBenefits']['mode'],
+              })
+            }
+          >
+            <option value="off">Not included</option>
+            <option value="self">I do</option>
+            <option value="partner">My partner does</option>
+          </select>
+          {v.childBenefits.mode !== 'off' && (
+            <>
+              <NumberField
+                label="Eligible children"
+                unit="#"
+                value={v.childBenefits.numberOfChildren}
+                min={1}
+                max={20}
+                step="1"
+                onChange={(n) =>
+                  set('childBenefits', { ...v.childBenefits, numberOfChildren: Math.floor(n) })
+                }
+              />
+              <p className="input-note">
+                The charge assumes you have the higher adjusted net income in your household. Only
+                benefit you receive is added to your cash total.
+              </p>
+            </>
+          )}
+          <Toggle
+            label="Exempt from employee / self-employed NI"
+            checked={v.noNI}
+            onChange={(b) => set('noNI', b)}
+            hint="For example, when the relevant State Pension age exemption applies. Employer NI is still shown."
+          />
+          <Toggle
+            label="Eligible for Blind Person’s Allowance"
+            checked={v.blind}
+            onChange={(b) => set('blind', b)}
+          />
+        </InputSection>
+      </form>
+      <div className="privacy-note">
+        <span aria-hidden="true">◇</span> Your numbers stay in this browser.
+        <br />
+        No account. No tracking. No saving your income.
+      </div>
+    </aside>
+  );
+}

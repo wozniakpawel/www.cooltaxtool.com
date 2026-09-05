@@ -125,7 +125,7 @@ describe('calculateNationalInsurance', () => {
       // Above primary threshold (£12,570) up to UEL (£50,270)
       // £17,430 at 8% = £1,394.40
       const result = calculateNationalInsurance(30000, constants, false, false);
-      expect(result.total).toBeCloseTo(1394.40, 2);
+      expect(result.total).toBeCloseTo(1394.4, 2);
     });
 
     it('should calculate NI for income above UEL', () => {
@@ -134,7 +134,7 @@ describe('calculateNationalInsurance', () => {
       // £50,270 to £60,000 = £9,730 at 2% = £194.60
       // Total = £3,210.60
       const result = calculateNationalInsurance(60000, constants, false, false);
-      expect(result.total).toBeCloseTo(3210.60, 2);
+      expect(result.total).toBeCloseTo(3210.6, 2);
     });
 
     it('should return zero when noNI is true', () => {
@@ -149,7 +149,7 @@ describe('calculateNationalInsurance', () => {
       // Above secondary threshold (£9,100) up to UEL (£50,270)
       // £20,900 at 13.8% = £2,884.20
       const result = calculateNationalInsurance(30000, constants, true, false);
-      expect(result.total).toBeCloseTo(2884.20, 2);
+      expect(result.total).toBeCloseTo(2884.2, 2);
     });
   });
 });
@@ -196,15 +196,15 @@ describe('calculateStudentLoanRepayments', () => {
 
 describe('calculatePeriodNI', () => {
   it('should charge employee NI on monthly pay with monthly thresholds', () => {
-    // (3,000 - 12,570/12) * 8% = (3,000 - 1,047.50) * 0.08 = £156.20
+    // (3,000 - published monthly PT of 1,048) * 8% = £156.16
     const result = calculatePeriodNI(3000, 12, constants, false, false);
-    expect(result.total).toBeCloseTo(156.20, 2);
+    expect(result.total).toBeCloseTo(156.16, 2);
   });
 
   it('should apply the upper earnings limit per month', () => {
-    // UEL/12 = 4,189.17: (4,189.17 - 1,047.50) * 8% + (27,000 - 4,189.17) * 2% ≈ £707.55
+    // Published monthly UEL = 4,189 and PT = 1,048: 251.28 + 456.22 = £707.50
     const result = calculatePeriodNI(27000, 12, constants, false, false);
-    expect(result.total).toBeCloseTo(707.55, 2);
+    expect(result.total).toBeCloseTo(707.5, 2);
   });
 
   it('should return zero when noNI is set', () => {
@@ -212,10 +212,10 @@ describe('calculatePeriodNI', () => {
   });
 
   it('should charge weekly NI with weekly thresholds including the weekly UEL', () => {
-    // weekly PT = 12,570/52 = 241.73, weekly UEL = 50,270/52 = 966.73
-    // (966.73 - 241.73) * 8% + (1,000 - 966.73) * 2% = 58.00 + 0.67 = 58.67
+    // Published weekly PT = 242 and UEL = 967
+    // (967 - 242) * 8% + (1,000 - 967) * 2% = £58.66
     const result = calculatePeriodNI(1000, 52, constants, false, false);
-    expect(result.total).toBeCloseTo(58.67, 2);
+    expect(result.total).toBeCloseTo(58.66, 2);
     expect(result.breakdown).toHaveLength(2);
   });
 
@@ -224,11 +224,11 @@ describe('calculatePeriodNI', () => {
     const evenMonths = 11 * calculatePeriodNI(3000, 12, constants, false, false).total;
     const bonusMonth = calculatePeriodNI(27000, 12, constants, false, false).total;
     const monthlyBasisTotal = evenMonths + bonusMonth;
-    expect(monthlyBasisTotal).toBeCloseTo(2425.75, 1);
+    expect(monthlyBasisTotal).toBeCloseTo(2425.26, 2);
 
     // Annual basis on the same £60,000: 37,700 * 8% + 9,730 * 2% = £3,210.60
     const annualBasis = calculateNationalInsurance(60000, constants, false, false);
-    expect(annualBasis.total).toBeCloseTo(3210.60, 2);
+    expect(annualBasis.total).toBeCloseTo(3210.6, 2);
     expect(monthlyBasisTotal).toBeLessThan(annualBasis.total);
   });
 });
@@ -261,7 +261,12 @@ describe('calculateChildBenefits', () => {
   const partnerInput = { mode: 'partner' as const, numberOfChildren: 2 };
 
   it('should return zeros when mode is off', () => {
-    const result = calculateChildBenefits(50000, { mode: 'off', numberOfChildren: 2 }, constants.childBenefitRates, constants.hicbc);
+    const result = calculateChildBenefits(
+      50000,
+      { mode: 'off', numberOfChildren: 2 },
+      constants.childBenefitRates,
+      constants.hicbc,
+    );
     expect(result.childBenefits.total).toBe(0);
     expect(result.hicbc).toBe(0);
   });
@@ -271,43 +276,73 @@ describe('calculateChildBenefits', () => {
       // First child: 25.60 * 52 = 1331.20
       // Additional child: 16.95 * 52 = 881.40
       // Total = 2212.60
-      const result = calculateChildBenefits(40000, selfInput, constants.childBenefitRates, constants.hicbc);
-      expect(result.childBenefits.total).toBeCloseTo(2212.60, 2);
+      const result = calculateChildBenefits(
+        40000,
+        selfInput,
+        constants.childBenefitRates,
+        constants.hicbc,
+      );
+      expect(result.childBenefits.total).toBeCloseTo(2212.6, 2);
       expect(result.hicbc).toBe(0);
     });
 
     it('should return gross benefits and hicbc above threshold', () => {
       // At 70000: excess = 10000, charge % = floor(10000/200) = 50%
       // Benefits = 2212.60, HICBC = 2212.60 * 50% = 1106.30
-      const result = calculateChildBenefits(70000, selfInput, constants.childBenefitRates, constants.hicbc);
-      expect(result.childBenefits.total).toBeCloseTo(2212.60, 2);
-      expect(result.hicbc).toBeCloseTo(1106.30, 2);
+      const result = calculateChildBenefits(
+        70000,
+        selfInput,
+        constants.childBenefitRates,
+        constants.hicbc,
+      );
+      expect(result.childBenefits.total).toBeCloseTo(2212.6, 2);
+      expect(result.hicbc).toBeCloseTo(1106.3, 2);
     });
 
     it('should clawback full benefits at 80000+', () => {
-      const result = calculateChildBenefits(80000, selfInput, constants.childBenefitRates, constants.hicbc);
-      expect(result.childBenefits.total).toBeCloseTo(2212.60, 2);
-      expect(result.hicbc).toBeCloseTo(2212.60, 2);
+      const result = calculateChildBenefits(
+        80000,
+        selfInput,
+        constants.childBenefitRates,
+        constants.hicbc,
+      );
+      expect(result.childBenefits.total).toBeCloseTo(2212.6, 2);
+      expect(result.hicbc).toBeCloseTo(2212.6, 2);
     });
   });
 
   describe('partner mode', () => {
     it('should return zero benefits and zero hicbc below threshold', () => {
-      const result = calculateChildBenefits(40000, partnerInput, constants.childBenefitRates, constants.hicbc);
+      const result = calculateChildBenefits(
+        40000,
+        partnerInput,
+        constants.childBenefitRates,
+        constants.hicbc,
+      );
       expect(result.childBenefits.total).toBe(0);
       expect(result.hicbc).toBe(0);
     });
 
     it('should return zero benefits and hicbc above threshold', () => {
-      const result = calculateChildBenefits(70000, partnerInput, constants.childBenefitRates, constants.hicbc);
+      const result = calculateChildBenefits(
+        70000,
+        partnerInput,
+        constants.childBenefitRates,
+        constants.hicbc,
+      );
       expect(result.childBenefits.total).toBe(0);
-      expect(result.hicbc).toBeCloseTo(1106.30, 2);
+      expect(result.hicbc).toBeCloseTo(1106.3, 2);
     });
 
     it('should return zero benefits and full hicbc at 80000+', () => {
-      const result = calculateChildBenefits(80000, partnerInput, constants.childBenefitRates, constants.hicbc);
+      const result = calculateChildBenefits(
+        80000,
+        partnerInput,
+        constants.childBenefitRates,
+        constants.hicbc,
+      );
       expect(result.childBenefits.total).toBe(0);
-      expect(result.hicbc).toBeCloseTo(2212.60, 2);
+      expect(result.hicbc).toBeCloseTo(2212.6, 2);
     });
   });
 
@@ -319,15 +354,25 @@ describe('calculateChildBenefits', () => {
       // First child: 24.00 * 52 = 1248.00
       // Additional child: 15.90 * 52 = 826.80
       // Benefits = 2074.80, HICBC = 1037.40
-      const result = calculateChildBenefits(55000, selfInput, oldConstants.childBenefitRates, oldConstants.hicbc);
-      expect(result.childBenefits.total).toBeCloseTo(2074.80, 2);
-      expect(result.hicbc).toBeCloseTo(1037.40, 2);
+      const result = calculateChildBenefits(
+        55000,
+        selfInput,
+        oldConstants.childBenefitRates,
+        oldConstants.hicbc,
+      );
+      expect(result.childBenefits.total).toBeCloseTo(2074.8, 2);
+      expect(result.hicbc).toBeCloseTo(1037.4, 2);
     });
 
     it('should return full hicbc at 60000+ in partner mode', () => {
-      const result = calculateChildBenefits(60000, partnerInput, oldConstants.childBenefitRates, oldConstants.hicbc);
+      const result = calculateChildBenefits(
+        60000,
+        partnerInput,
+        oldConstants.childBenefitRates,
+        oldConstants.hicbc,
+      );
       expect(result.childBenefits.total).toBe(0);
-      expect(result.hicbc).toBeCloseTo(2074.80, 2);
+      expect(result.hicbc).toBeCloseTo(2074.8, 2);
     });
   });
 });
@@ -344,11 +389,11 @@ describe('grossManualPensionContributions', () => {
     expect(result).toBe(800);
   });
 
-  it('should cap relief at £2,880 for non-taxpayers', () => {
+  it('should allow relief up to relevant earnings even below the Personal Allowance', () => {
     // Non-taxpayer (income £10,000, allowance £12,570) contributing £5,000
-    // Only first £2,880 gets grossed up: £2,880 * 1.25 + £2,120 = £5,720
+    // £6,250 gross is within £10,000 relevant earnings: the whole payment gets relief.
     const result = grossManualPensionContributions(5000, true, 10000, 12570);
-    expect(result).toBe(5720);
+    expect(result).toBe(6250);
   });
 
   it('should give full relief to non-taxpayers contributing under £2,880', () => {
@@ -405,7 +450,12 @@ describe('calculateTaxes', () => {
     noNI: false,
     blind: false,
     childBenefits: { mode: 'off', numberOfChildren: 1 },
-    pensionContributions: { autoEnrolment: 0, autoEnrolmentEmployer: 0, salarySacrifice: 0, personal: 0 },
+    pensionContributions: {
+      autoEnrolment: 0,
+      autoEnrolmentEmployer: 0,
+      salarySacrifice: 0,
+      personal: 0,
+    },
     salarySacrificeIsPercentage: false,
     autoEnrolmentAsSalarySacrifice: true,
     autoEnrolmentOnQualifyingEarnings: false,
@@ -450,7 +500,11 @@ describe('calculateTaxes', () => {
     const withEmployer = calculateTaxes({
       ...baseInputs,
       pensionEnabled: true,
-      pensionContributions: { ...baseInputs.pensionContributions, autoEnrolment: 5, autoEnrolmentEmployer: 3 },
+      pensionContributions: {
+        ...baseInputs.pensionContributions,
+        autoEnrolment: 5,
+        autoEnrolmentEmployer: 3,
+      },
     });
 
     // Employer pays 3% of £50,000 = £1,500 into the pot
@@ -500,7 +554,7 @@ describe('calculateTaxes', () => {
     // 2024/25 employer NI is 13.8%; £5,000 sacrificed entirely above the
     // secondary threshold saves the employer 5,000 * 0.138 = £690
     expect(result.pensionPot.total).toBeCloseTo(5000 + 690, 2);
-    const niSaving = result.pensionPot.breakdown.find(b => b.rate === 'Employer NI saving');
+    const niSaving = result.pensionPot.breakdown.find((b) => b.rate === 'Employer NI saving');
     expect(niSaving?.amount).toBeCloseTo(690, 2);
 
     // Take-home pay and employee taxes are unaffected by the employer's top-up
@@ -510,13 +564,15 @@ describe('calculateTaxes', () => {
     expect(result.adjustedNetIncome).toBe(withoutTopUp.adjustedNetIncome);
   });
 
-  it('should add no employer NI saving when nothing is sacrificed or NI is excluded', () => {
+  it('should retain employer NI savings when only the employee is NI exempt', () => {
     const noSacrifice = calculateTaxes({
       ...baseInputs,
       pensionEnabled: true,
       employerNISavingsToPension: true,
     });
-    expect(noSacrifice.pensionPot.breakdown.find(b => b.rate === 'Employer NI saving')?.amount).toBe(0);
+    expect(
+      noSacrifice.pensionPot.breakdown.find((b) => b.rate === 'Employer NI saving')?.amount,
+    ).toBe(0);
 
     const noNI = calculateTaxes({
       ...baseInputs,
@@ -525,7 +581,10 @@ describe('calculateTaxes', () => {
       employerNISavingsToPension: true,
       pensionContributions: { ...baseInputs.pensionContributions, salarySacrifice: 5000 },
     });
-    expect(noNI.pensionPot.breakdown.find(b => b.rate === 'Employer NI saving')?.amount).toBe(0);
+    expect(noNI.pensionPot.breakdown.find((b) => b.rate === 'Employer NI saving')?.amount).toBe(
+      690,
+    );
+    expect(noNI.employeeNI.total).toBe(0);
   });
 
   describe('dividend tax', () => {
@@ -599,31 +658,49 @@ describe('calculateTaxes', () => {
   describe('self-employed', () => {
     it('should charge Class 4 instead of Class 1 and no employer NI (2024/25)', () => {
       const employed = calculateTaxes({ ...baseInputs, annualGrossSalary: 50000 });
-      const selfEmployed = calculateTaxes({ ...baseInputs, annualGrossSalary: 50000, selfEmployed: true });
+      const selfEmployed = calculateTaxes({
+        ...baseInputs,
+        annualGrossSalary: 50000,
+        selfEmployed: true,
+      });
 
       // Class 4: (50,000 - 12,570) × 6% = £2,245.80; Class 2 abolished in 2024/25
-      expect(selfEmployed.employeeNI.total).toBeCloseTo(2245.80, 2);
-      expect(selfEmployed.employeeNI.breakdown.find(b => b.rate === 'Class 2')).toBeUndefined();
+      expect(selfEmployed.employeeNI.total).toBeCloseTo(2245.8, 2);
+      expect(selfEmployed.employeeNI.breakdown.find((b) => b.rate === 'Class 2')).toBeUndefined();
       expect(selfEmployed.employerNI.total).toBe(0);
       expect(selfEmployed.incomeTax.total).toBe(employed.incomeTax.total);
     });
 
     it('should charge the 2% Class 4 rate above the upper limit', () => {
-      const result = calculateTaxes({ ...baseInputs, annualGrossSalary: 60000, selfEmployed: true });
+      const result = calculateTaxes({
+        ...baseInputs,
+        annualGrossSalary: 60000,
+        selfEmployed: true,
+      });
       // 37,700 × 6% + 9,730 × 2% = 2,262 + 194.60
-      expect(result.employeeNI.total).toBeCloseTo(2456.60, 2);
+      expect(result.employeeNI.total).toBeCloseTo(2456.6, 2);
     });
 
     it('should include Class 2 for years before its abolition (2023/24)', () => {
-      const result = calculateTaxes({ ...baseInputs, taxYear: '2023/24', annualGrossSalary: 50000, selfEmployed: true });
+      const result = calculateTaxes({
+        ...baseInputs,
+        taxYear: '2023/24',
+        annualGrossSalary: 50000,
+        selfEmployed: true,
+      });
       // Class 4: (50,000 - 12,570) × 9% = 3,368.70; Class 2: 3.45 × 52 = 179.40
-      const class2 = result.employeeNI.breakdown.find(b => b.rate === 'Class 2');
-      expect(class2?.amount).toBeCloseTo(179.40, 2);
-      expect(result.employeeNI.total).toBeCloseTo(3548.10, 2);
+      const class2 = result.employeeNI.breakdown.find((b) => b.rate === 'Class 2');
+      expect(class2?.amount).toBeCloseTo(179.4, 2);
+      expect(result.employeeNI.total).toBeCloseTo(3548.1, 2);
     });
 
     it('should respect noNI', () => {
-      const result = calculateTaxes({ ...baseInputs, annualGrossSalary: 50000, selfEmployed: true, noNI: true });
+      const result = calculateTaxes({
+        ...baseInputs,
+        annualGrossSalary: 50000,
+        selfEmployed: true,
+        noNI: true,
+      });
       expect(result.employeeNI.total).toBe(0);
     });
   });
@@ -643,7 +720,7 @@ describe('calculateTaxes', () => {
       expect(withDB.incomeTax.total).toBe(6836);
       // NI is unchanged — net pay arrangement gives no NI saving
       expect(withDB.employeeNI.total).toBe(withoutDB.employeeNI.total);
-      expect(withDB.employeeNI.total).toBeCloseTo(2994.40, 2);
+      expect(withDB.employeeNI.total).toBeCloseTo(2994.4, 2);
       // Take-home falls by the contribution net of the 20% tax saving
       expect(withoutDB.takeHomePay - withDB.takeHomePay).toBeCloseTo(3250 - 650, 2);
       // Accrued pension and annual allowance usage (x16 factor)
@@ -667,7 +744,11 @@ describe('calculateTaxes', () => {
     });
 
     it('should be inert when the DB switch is off', () => {
-      const result = calculateTaxes({ ...baseInputs, pensionEnabled: true, dbMemberContribution: 10 });
+      const result = calculateTaxes({
+        ...baseInputs,
+        pensionEnabled: true,
+        dbMemberContribution: 10,
+      });
       expect(result.dbPension.accrued).toBe(0);
       expect(result.dbPension.memberContribution).toBe(0);
       expect(result.pensionAnnualAllowance.used).toBe(result.pensionPot.total);
@@ -682,12 +763,16 @@ describe('calculateTaxes', () => {
         annualGrossSalary: 30000,
         pensionEnabled: true,
         autoEnrolmentOnQualifyingEarnings: true,
-        pensionContributions: { ...baseInputs.pensionContributions, autoEnrolment: 5, autoEnrolmentEmployer: 3 },
+        pensionContributions: {
+          ...baseInputs.pensionContributions,
+          autoEnrolment: 5,
+          autoEnrolmentEmployer: 3,
+        },
       });
 
       // Base = 30,000 - 6,240 = 23,760; employee 5% = 1,188; employer 3% = 712.80
       expect(result.pensionPot.breakdown[1].amount).toBeCloseTo(1188, 2);
-      expect(result.pensionPot.breakdown[2].amount).toBeCloseTo(712.80, 2);
+      expect(result.pensionPot.breakdown[2].amount).toBeCloseTo(712.8, 2);
     });
 
     it('should cap the qualifying earnings base at the upper limit', () => {
@@ -700,7 +785,7 @@ describe('calculateTaxes', () => {
       });
 
       // Base capped at 50,270 - 6,240 = 44,030; 5% = 2,201.50
-      expect(result.pensionPot.breakdown[1].amount).toBeCloseTo(2201.50, 2);
+      expect(result.pensionPot.breakdown[1].amount).toBeCloseTo(2201.5, 2);
     });
 
     it('should contribute nothing below the lower limit', () => {
@@ -776,7 +861,11 @@ describe('calculateTaxes', () => {
   it('should calculate combined taxes correctly', () => {
     const result = calculateTaxes(baseInputs);
 
-    const expectedCombined = result.incomeTax.total + result.employeeNI.total + result.studentLoanRepayments.total + result.hicbc;
+    const expectedCombined =
+      result.incomeTax.total +
+      result.employeeNI.total +
+      result.studentLoanRepayments.total +
+      result.hicbc;
     expect(result.combinedTaxes).toBe(expectedCombined);
   });
 
@@ -813,9 +902,14 @@ describe('calculateTaxes', () => {
     };
     const result = calculateTaxes(inputs);
 
-    expect(result.childBenefits.total).toBeCloseTo(2212.60, 2);
-    expect(result.hicbc).toBeCloseTo(1106.30, 2);
-    expect(result.combinedTaxes).toBe(result.incomeTax.total + result.employeeNI.total + result.studentLoanRepayments.total + result.hicbc);
+    expect(result.childBenefits.total).toBeCloseTo(2212.6, 2);
+    expect(result.hicbc).toBeCloseTo(1106.3, 2);
+    expect(result.combinedTaxes).toBe(
+      result.incomeTax.total +
+        result.employeeNI.total +
+        result.studentLoanRepayments.total +
+        result.hicbc,
+    );
   });
 
   it('should handle HICBC in partner mode', () => {
@@ -827,53 +921,73 @@ describe('calculateTaxes', () => {
     const result = calculateTaxes(inputs);
 
     expect(result.childBenefits.total).toBe(0);
-    expect(result.hicbc).toBeCloseTo(1106.30, 2);
-    expect(result.combinedTaxes).toBe(result.incomeTax.total + result.employeeNI.total + result.studentLoanRepayments.total + result.hicbc);
+    expect(result.hicbc).toBeCloseTo(1106.3, 2);
+    expect(result.combinedTaxes).toBe(
+      result.incomeTax.total +
+        result.employeeNI.total +
+        result.studentLoanRepayments.total +
+        result.hicbc,
+    );
   });
 
   it('should include hicbc in combinedTaxes', () => {
     const result = calculateTaxes(baseInputs);
-    expect(result.combinedTaxes).toBe(result.incomeTax.total + result.employeeNI.total + result.studentLoanRepayments.total + result.hicbc);
+    expect(result.combinedTaxes).toBe(
+      result.incomeTax.total +
+        result.employeeNI.total +
+        result.studentLoanRepayments.total +
+        result.hicbc,
+    );
   });
 
-  describe("section toggles", () => {
-    it("ignores pension contributions when pensionEnabled is false", () => {
-        const result = calculateTaxes({
-            ...baseInputs,
-            pensionEnabled: false,
-            pensionContributions: { autoEnrolment: 5, autoEnrolmentEmployer: 0, salarySacrifice: 5000, personal: 3000 },
-        });
-        expect(result.pensionPot.total).toBe(0);
+  describe('section toggles', () => {
+    it('ignores pension contributions when pensionEnabled is false', () => {
+      const result = calculateTaxes({
+        ...baseInputs,
+        pensionEnabled: false,
+        pensionContributions: {
+          autoEnrolment: 5,
+          autoEnrolmentEmployer: 0,
+          salarySacrifice: 5000,
+          personal: 3000,
+        },
+      });
+      expect(result.pensionPot.total).toBe(0);
     });
 
-    it("includes pension contributions when pensionEnabled is true", () => {
-        const result = calculateTaxes({
-            ...baseInputs,
-            pensionEnabled: true,
-            annualGrossSalary: 50000,
-            pensionContributions: { autoEnrolment: 5, autoEnrolmentEmployer: 0, salarySacrifice: 5000, personal: 3000 },
-        });
-        expect(result.pensionPot.total).toBeGreaterThan(0);
+    it('includes pension contributions when pensionEnabled is true', () => {
+      const result = calculateTaxes({
+        ...baseInputs,
+        pensionEnabled: true,
+        annualGrossSalary: 50000,
+        pensionContributions: {
+          autoEnrolment: 5,
+          autoEnrolmentEmployer: 0,
+          salarySacrifice: 5000,
+          personal: 3000,
+        },
+      });
+      expect(result.pensionPot.total).toBeGreaterThan(0);
     });
 
-    it("ignores student loans when studentLoanEnabled is false", () => {
-        const result = calculateTaxes({
-            ...baseInputs,
-            studentLoanEnabled: false,
-            studentLoan: ["plan2" as const],
-            annualGrossSalary: 50000,
-        });
-        expect(result.studentLoanRepayments.total).toBe(0);
+    it('ignores student loans when studentLoanEnabled is false', () => {
+      const result = calculateTaxes({
+        ...baseInputs,
+        studentLoanEnabled: false,
+        studentLoan: ['plan2' as const],
+        annualGrossSalary: 50000,
+      });
+      expect(result.studentLoanRepayments.total).toBe(0);
     });
 
-    it("includes student loans when studentLoanEnabled is true", () => {
-        const result = calculateTaxes({
-            ...baseInputs,
-            studentLoanEnabled: true,
-            studentLoan: ["plan2" as const],
-            annualGrossSalary: 50000,
-        });
-        expect(result.studentLoanRepayments.total).toBeGreaterThan(0);
+    it('includes student loans when studentLoanEnabled is true', () => {
+      const result = calculateTaxes({
+        ...baseInputs,
+        studentLoanEnabled: true,
+        studentLoan: ['plan2' as const],
+        annualGrossSalary: 50000,
+      });
+      expect(result.studentLoanRepayments.total).toBeGreaterThan(0);
     });
   });
 });

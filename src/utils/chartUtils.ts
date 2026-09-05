@@ -1,15 +1,15 @@
 import type { ApexOptions } from 'apexcharts';
 
-const currencyFormatter = new Intl.NumberFormat("en-GB", {
-  style: "currency",
-  currency: "GBP",
+const currencyFormatter = new Intl.NumberFormat('en-GB', {
+  style: 'currency',
+  currency: 'GBP',
   minimumFractionDigits: 0,
   maximumFractionDigits: 0,
 });
 
-const currencyFormatterPrecise = new Intl.NumberFormat("en-GB", {
-  style: "currency",
-  currency: "GBP",
+const currencyFormatterPrecise = new Intl.NumberFormat('en-GB', {
+  style: 'currency',
+  currency: 'GBP',
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
 });
@@ -19,25 +19,31 @@ export const formatCurrencyPrecise = (value: number) => currencyFormatterPrecise
 export const formatPercent = (value: number) => `${value.toFixed(1)}%`;
 
 export const getChartTheme = (theme: string) => {
-  const isDark = theme === "dark";
+  const isDark = theme === 'dark';
   return {
     isDark,
-    axisColor: isDark ? "#fff" : "#666",
-    gridColor: isDark ? "#555" : "#ccc",
-    backgroundColor: isDark ? "#333" : "#fff",
-    textColor: isDark ? "#fff" : "#333",
+    axisColor: isDark ? '#a7b8ac' : '#596b60',
+    gridColor: isDark ? '#34453b' : '#e4e9e2',
+    backgroundColor: isDark ? '#1d2b25' : '#fff',
+    textColor: isDark ? '#e7eee8' : '#243c34',
   };
 };
 
-export const getApexChartOptions = (theme: string, { isPercentage = false, xAxisTitle = "", yAxisTitle = "" } = {}): ApexOptions => {
+export const getApexChartOptions = (
+  theme: string,
+  { isPercentage = false, xAxisTitle = '', yAxisTitle = '' } = {},
+): ApexOptions => {
   const { isDark, axisColor, gridColor, textColor } = getChartTheme(theme);
 
   return {
+    noData: { text: 'Select a measure to display.' },
     chart: {
-      type: "line" as const,
-      background: "transparent",
+      type: 'line' as const,
+      background: 'transparent',
+      fontFamily: 'IBM Plex Sans, sans-serif',
+      foreColor: axisColor,
       toolbar: {
-        show: true,
+        show: false,
         tools: {
           download: true,
           selection: true,
@@ -50,7 +56,7 @@ export const getApexChartOptions = (theme: string, { isPercentage = false, xAxis
       },
       zoom: {
         enabled: true,
-        type: "xy",
+        type: 'xy',
         autoScaleYaxis: true,
       },
       animations: {
@@ -58,10 +64,10 @@ export const getApexChartOptions = (theme: string, { isPercentage = false, xAxis
       },
     },
     theme: {
-      mode: isDark ? "dark" : "light",
+      mode: isDark ? 'dark' : 'light',
     },
     stroke: {
-      curve: "smooth",
+      curve: 'straight',
       width: 2,
     },
     grid: {
@@ -69,7 +75,7 @@ export const getApexChartOptions = (theme: string, { isPercentage = false, xAxis
       strokeDashArray: 3,
     },
     xaxis: {
-      type: "numeric",
+      type: 'numeric',
       labels: {
         style: {
           colors: axisColor,
@@ -94,10 +100,10 @@ export const getApexChartOptions = (theme: string, { isPercentage = false, xAxis
         style: {
           colors: axisColor,
         },
-        formatter: (value: number) => isPercentage ? formatPercent(value) : formatCurrency(value),
+        formatter: (value: number) => (isPercentage ? formatPercent(value) : formatCurrency(value)),
       },
-      min: isPercentage ? 0 : undefined,
-      max: isPercentage ? 100 : undefined,
+      min: undefined,
+      max: undefined,
       title: {
         text: yAxisTitle,
         style: {
@@ -106,7 +112,7 @@ export const getApexChartOptions = (theme: string, { isPercentage = false, xAxis
       },
     },
     tooltip: {
-      theme: isDark ? "dark" : "light",
+      theme: isDark ? 'dark' : 'light',
       x: {
         formatter: (value: number) => `Gross: ${formatCurrency(value)}`,
       },
@@ -116,7 +122,7 @@ export const getApexChartOptions = (theme: string, { isPercentage = false, xAxis
     },
     legend: {
       show: true,
-      position: "bottom",
+      position: 'bottom',
       labels: {
         colors: textColor,
       },

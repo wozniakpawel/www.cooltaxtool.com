@@ -1,76 +1,136 @@
-import { useState, useEffect, useCallback } from "react";
-import { Container, Row, Col, ButtonGroup, Button } from "react-bootstrap";
-import { defaultInputs, UserMenu } from "./components/UserMenu";
-import TaxYearOverview from "./components/TaxYearOverview";
-import IncomeAnalysis from "./components/IncomeAnalysis";
-import PayePlanner from "./components/PayePlanner";
-import Header from "./components/Header";
-import Footer from "./components/Footer";
-import type { TaxInputs } from "./types/tax";
-
-const getInitialTheme = () => {
-  const savedTheme = localStorage.getItem("theme");
-  if (savedTheme) {
-    return savedTheme;
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
+import { UserMenu, defaultInputs } from './components/UserMenu';
+import Overview from './components/dashboard/Overview';
+import Guide from './components/dashboard/Guide';
+import Header from './components/Header';
+import Footer from './components/Footer';
+import type { TaxInputs } from './types/tax';
+const Explorer = lazy(() => import('./components/dashboard/Explorer'));
+const Compare = lazy(() => import('./components/dashboard/Compare'));
+const PayePlanner = lazy(() => import('./components/PayePlanner'));
+const initialTheme = () => {
+  try {
+    const saved = localStorage.getItem('theme');
+    if (saved === 'dark' || saved === 'light') return saved;
+  } catch {
+    /* optional preference */
   }
-  return window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  return 'light';
 };
-
-type View = "myTaxes" | "explorer" | "paye";
-
-const views: { key: View; label: string }[] = [
-  { key: "myTaxes", label: "My Taxes" },
-  { key: "explorer", label: "Income Explorer" },
-  { key: "paye", label: "PAYE Planner" },
+type View = 'overview' | 'explorer' | 'compare' | 'paye';
+const views: { key: View; label: string; icon: string }[] = [
+  { key: 'overview', label: 'Overview', icon: '◫' },
+  { key: 'explorer', label: 'Income explorer', icon: '⌁' },
+  { key: 'compare', label: 'Compare scenarios', icon: '⇄' },
+  { key: 'paye', label: 'PAYE planner', icon: '▦' },
 ];
-
 function App() {
-  const [userInputs, setUserInputs] = useState(defaultInputs);
-  const [view, setView] = useState<View>("myTaxes");
-  const [theme, setTheme] = useState(getInitialTheme);
-
+  const [inputs, setInputs] = useState(defaultInputs);
+  const [view, setView] = useState<View>('overview');
+  const [theme, setTheme] = useState(initialTheme);
   useEffect(() => {
-    document.body.className = theme;
-    localStorage.setItem("theme", theme);
+    document.body.classList.remove('dark', 'light');
+    document.body.classList.add(theme);
+    document.documentElement.style.colorScheme = theme;
+    try {
+      localStorage.setItem('theme', theme);
+    } catch {
+      /* preference is optional */
+    }
   }, [theme]);
-
-  function toggleTheme() {
-    setTheme(theme === "light" ? "dark" : "light");
-  }
-
-  const handleUserInputsChange = useCallback((inputs: TaxInputs) => {
-    setUserInputs(inputs);
-  }, []);
-
+  const updateInputs = useCallback((values: TaxInputs) => setInputs(values), []);
   return (
-    <Container fluid className="d-flex flex-column min-vh-100 p-0">
-      <Container className="page-content p-0">
-        <Row>
-          <Col xs={12} lg={6}>
-            <Header theme={theme} toggleTheme={toggleTheme} />
-            <UserMenu onUserInputsChange={handleUserInputsChange} />
-          </Col>
-          <Col xs={12} lg={6} className="pt-3">
-            <ButtonGroup className="mb-3">
-              {views.map(({ key, label }) => (
-                <Button
-                  key={key}
-                  variant={view === key ? "primary" : "outline-primary"}
-                  onClick={() => setView(key)}
+    <>
+      <a className="skip-link" href="#results">
+        Skip to results
+      </a>
+      <Header
+        theme={theme}
+        toggleTheme={() => setTheme((t) => (t === 'light' ? 'dark' : 'light'))}
+      />
+      <main className="site-shell" id="calculator">
+        <div className="page-intro">
+          <div>
+            <div className="intro-kicker">
+              <span className="status-dot" /> FREE UK TAX CALCULATOR
+            </div>
+            <h1>
+              Big decisions.
+              <br className="mobile-break" /> Clearer numbers<span className="title-dot">.</span>
+            </h1>
+            <p>Know what you earn. See what you keep. Make a plan for what’s next.</p>
+          </div>
+          <div className="year-stamp">
+            <span>BUILT FOR YOUR TAX YEAR</span>
+            <strong>{inputs.taxYear}</strong>
+            <small>
+              6 April {inputs.taxYear.slice(0, 4)} – 5 April{' '}
+              {Number(inputs.taxYear.slice(0, 4)) + 1}
+            </small>
+          </div>
+        </div>
+        <a className="mobile-results-link" href="#results">
+          Jump to your results ↓
+        </a>
+        <div className="calculator-layout">
+          <UserMenu onUserInputsChange={updateInputs} />
+          <div className="results-column" id="results" tabIndex={-1}>
+            <nav className="workspace-tabs" aria-label="Calculator views">
+              {views.map((v) => (
+                <button
+                  key={v.key}
+                  aria-pressed={view === v.key}
+                  className={view === v.key ? 'active' : ''}
+                  onClick={() => setView(v.key)}
                 >
-                  {label}
-                </Button>
+                  <span aria-hidden="true">{v.icon}</span>
+                  {v.label}
+                </button>
               ))}
-            </ButtonGroup>
-            {view === "myTaxes" && <IncomeAnalysis inputs={userInputs} theme={theme} />}
-            {view === "explorer" && <TaxYearOverview inputs={userInputs} theme={theme} />}
-            {view === "paye" && <PayePlanner inputs={userInputs} theme={theme} />}
-          </Col>
-        </Row>
-      </Container>
+            </nav>
+            {(inputs.taxYear === '2022/23' || inputs.taxYear === '2023/24') && (
+              <p className="notice warning">
+                {inputs.taxYear} NI changed during the year. Annual estimates assume even pay; see
+                the assumptions below.
+              </p>
+            )}
+            <Suspense
+              fallback={
+                <div className="surface loading-state" role="status">
+                  Loading your calculator…
+                </div>
+              }
+            >
+              {view === 'overview' && (
+                <Overview inputs={inputs} onCompare={() => setView('compare')} />
+              )}
+              {view === 'explorer' && <Explorer inputs={inputs} theme={theme} />}
+              {view === 'compare' && <Compare inputs={inputs} />}
+              {view === 'paye' && (
+                <div className="view-enter">
+                  <div className="view-heading">
+                    <div>
+                      <span className="eyebrow">PLAN A CHANGING YEAR</span>
+                      <h2>Your pay, month by month.</h2>
+                      <p>Explore bonus payments, pay rises and payroll deductions.</p>
+                    </div>
+                  </div>
+                  <PayePlanner inputs={inputs} theme={theme} />
+                </div>
+              )}
+            </Suspense>
+            <Guide inputs={inputs} />
+          </div>
+        </div>
+        <div className="trust-strip">
+          <span>◇ No accounts or tracking</span>
+          <span>↗ Official tax sources</span>
+          <span>⌘ Free & open source</span>
+          <span>✓ Calculations run in your browser</span>
+        </div>
+      </main>
       <Footer />
-    </Container>
+    </>
   );
 }
-
 export default App;

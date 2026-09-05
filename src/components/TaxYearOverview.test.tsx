@@ -1,16 +1,13 @@
-import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import TaxYearOverview from "./TaxYearOverview";
-import type { TaxInputs } from "../types/tax";
+import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import TaxYearOverview from './TaxYearOverview';
+import type { TaxInputs } from '../types/tax';
 
 // Override the global stub with one that captures the series passed to the chart
 vi.mock('react-apexcharts', () => ({
   default: function MockChart(props: { series: { name: string }[] }) {
     return (
-      <div
-        data-testid="mock-chart"
-        data-series={JSON.stringify(props.series.map((s) => s.name))}
-      />
+      <div data-testid="mock-chart" data-series={JSON.stringify(props.series.map((s) => s.name))} />
     );
   },
 }));
@@ -28,7 +25,12 @@ const testInputs: TaxInputs = {
   noNI: false,
   blind: false,
   childBenefits: { mode: 'off', numberOfChildren: 1 },
-  pensionContributions: { autoEnrolment: 0, autoEnrolmentEmployer: 0, salarySacrifice: 0, personal: 0 },
+  pensionContributions: {
+    autoEnrolment: 0,
+    autoEnrolmentEmployer: 0,
+    salarySacrifice: 0,
+    personal: 0,
+  },
   salarySacrificeIsPercentage: false,
   autoEnrolmentAsSalarySacrifice: true,
   autoEnrolmentOnQualifyingEarnings: false,
@@ -42,59 +44,59 @@ const testInputs: TaxInputs = {
 };
 
 const amountChartSeries = (): string[] => {
-  const charts = screen.getAllByTestId("mock-chart");
+  const charts = screen.getAllByTestId('mock-chart');
   // second chart is "Annual total amounts"
-  return JSON.parse(charts[1].getAttribute("data-series") ?? "[]");
+  return JSON.parse(charts[1].getAttribute('data-series') ?? '[]');
 };
 
-describe("TaxYearOverview plot builder", () => {
+describe('TaxYearOverview plot builder', () => {
   beforeEach(() => {
     localStorage.clear();
   });
 
-  it("renders the plot builder panel with the income range input by default", () => {
+  it('renders the plot builder panel with the income range input by default', () => {
     render(<TaxYearOverview inputs={testInputs} theme="light" />);
-    expect(screen.getByText("Plot builder")).toBeInTheDocument();
+    expect(screen.getByText('Plot builder')).toBeInTheDocument();
     expect(screen.getByText(/Income range/)).toBeInTheDocument();
   });
 
-  it("checks the default starter series and leaves the rest unchecked", () => {
+  it('checks the default starter series and leaves the rest unchecked', () => {
     render(<TaxYearOverview inputs={testInputs} theme="light" />);
-    expect(screen.getByLabelText("Take Home Pay")).toBeChecked();
-    expect(screen.getByLabelText("Combined taxes (IT, EE NI, SL, HICBC)")).toBeChecked();
-    expect(screen.getByLabelText("Total you keep (Pension Pot + Take Home)")).toBeChecked();
-    expect(screen.getByLabelText("Income Tax")).not.toBeChecked();
-    expect(screen.getByLabelText("Employee NI Contributions")).not.toBeChecked();
+    expect(screen.getByLabelText('Take Home Pay')).toBeChecked();
+    expect(screen.getByLabelText('Total deductions (including your pension)')).toBeChecked();
+    expect(screen.getByLabelText('Total you keep (Pension Pot + Take Home)')).not.toBeChecked();
+    expect(screen.getByLabelText('Income Tax')).not.toBeChecked();
+    expect(screen.getByLabelText('Employee NI Contributions')).not.toBeChecked();
   });
 
-  it("removes a series from the chart when its checkbox is unticked", () => {
+  it('removes a series from the chart when its checkbox is unticked', () => {
     render(<TaxYearOverview inputs={testInputs} theme="light" />);
-    expect(amountChartSeries()).toContain("Take Home Pay");
-    fireEvent.click(screen.getByLabelText("Take Home Pay"));
-    expect(amountChartSeries()).not.toContain("Take Home Pay");
+    expect(amountChartSeries()).toContain('Take Home Pay');
+    fireEvent.click(screen.getByLabelText('Take Home Pay'));
+    expect(amountChartSeries()).not.toContain('Take Home Pay');
   });
 
-  it("select all and clear drive the plotted series", () => {
+  it('select all and clear drive the plotted series', () => {
     render(<TaxYearOverview inputs={testInputs} theme="light" />);
-    fireEvent.click(screen.getByRole("button", { name: "Clear" }));
+    fireEvent.click(screen.getByRole('button', { name: 'Clear' }));
     expect(amountChartSeries()).toHaveLength(0);
-    fireEvent.click(screen.getByRole("button", { name: "Select all" }));
+    fireEvent.click(screen.getByRole('button', { name: 'Select all' }));
     expect(amountChartSeries().length).toBeGreaterThan(5);
   });
 
-  it("hides the income range input for the auto enrolment sweep", () => {
+  it('hides the income range input for the auto enrolment sweep', () => {
     render(<TaxYearOverview inputs={testInputs} theme="light" />);
-    fireEvent.change(screen.getByRole("combobox"), { target: { value: "autoEnrolment" } });
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'autoEnrolment' } });
     expect(screen.queryByText(/Income range/)).not.toBeInTheDocument();
     // switching back restores it
-    fireEvent.change(screen.getByRole("combobox"), { target: { value: "grossIncome" } });
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'grossIncome' } });
     expect(screen.getByText(/Income range/)).toBeInTheDocument();
   });
 
-  it("persists the selection in localStorage", () => {
+  it('persists the selection in localStorage', () => {
     render(<TaxYearOverview inputs={testInputs} theme="light" />);
-    fireEvent.click(screen.getByLabelText("Income Tax"));
-    const stored = JSON.parse(localStorage.getItem("cooltaxtool-plot-builder") ?? "{}");
-    expect(stored.selected).toContain("incomeTax");
+    fireEvent.click(screen.getByLabelText('Income Tax'));
+    const stored = JSON.parse(localStorage.getItem('cooltaxtool-plot-builder') ?? '{}');
+    expect(stored.selected).toContain('incomeTax');
   });
 });

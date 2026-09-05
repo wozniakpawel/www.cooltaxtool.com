@@ -175,6 +175,10 @@ export interface TaxCalculationResult {
   employerNI: CalculationResult;
   studentLoanRepayments: CalculationResult;
   combinedTaxes: number;
+  employeePensionContributions: number; // cash paid or salary foregone, excluding employer money and provider relief
+  combinedDeductions: number; // tax, NI, loans, HICBC and employee pension costs
+  pensionReliefAtSource: number; // government top-up paid into the pension
+  unrelievedPensionContributions: number; // personal payment above earnings relief limit
   hicbc: number;
   childBenefits: CalculationResult;
   takeHomePay: number;
