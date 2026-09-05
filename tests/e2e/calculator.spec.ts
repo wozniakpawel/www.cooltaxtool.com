@@ -135,3 +135,62 @@ test('reverse calculator finds a salary for a monthly cash target', async ({ pag
   );
   await expect(page.getByRole('status')).toContainText('£54,211.38');
 });
+
+test('salary and pension charts paint lines, expose the breakdown and preserve pension comparisons', async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Income explorer', exact: true }).click();
+  const mainChart = page.locator('.apexcharts-canvas').first();
+  for (const mode of ['Explore salary', 'Explore pension']) {
+    await page.getByRole('button', { name: mode, exact: true }).click();
+    await expect(mainChart.locator('.apexcharts-line')).toHaveCount(4);
+    await expect(mainChart.locator('.apexcharts-datalabel')).toHaveCount(0);
+    await expect(mainChart.locator('.apexcharts-legend')).toContainText('Total kept');
+    // Checking path existence alone misses invisible SVG clipping regressions.
+    // The rendered pixels must change when just the lines are hidden.
+    await mainChart.scrollIntoViewIfNeeded();
+    await page.mouse.move(0, 0);
+    const visible = await mainChart.screenshot();
+    await mainChart
+      .locator('.apexcharts-line')
+      .evaluateAll((es) => es.forEach((e) => e.setAttribute('opacity', '0')));
+    const hidden = await mainChart.screenshot();
+    expect(visible.equals(hidden)).toBe(false);
+    await mainChart
+      .locator('.apexcharts-line')
+      .evaluateAll((es) => es.forEach((e) => e.removeAttribute('opacity')));
+    await page.getByLabel('Show tax & pension breakdown', { exact: true }).check();
+    await expect(mainChart.locator('.apexcharts-line')).toHaveCount(11);
+    await expect(mainChart.locator('.apexcharts-legend')).toContainText('Your National Insurance');
+    await page.getByRole('button', { name: '% of gross income', exact: true }).click();
+    await expect(mainChart.locator('.apexcharts-yaxis')).toContainText('%');
+    await page.getByRole('button', { name: 'Annual amounts', exact: true }).click();
+    await page.getByLabel('Show tax & pension breakdown', { exact: true }).uncheck();
+  }
+  await expect(page.locator('.apexcharts-canvas')).toHaveCount(3);
+  await expect(
+    page.getByRole('heading', { name: 'Tax relief and effective tax rate' }),
+  ).toBeVisible();
+  await page.getByText('View pension relief data', { exact: true }).click();
+  await expect(
+    page.getByRole('columnheader', { name: 'Tax savings & top-up', exact: true }),
+  ).toBeVisible();
+  await page.getByText('View workplace pension data', { exact: true }).click();
+  await expect(
+    page.getByRole('columnheader', { name: 'Workplace contribution', exact: true }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Dark mode', exact: true }).click();
+  await expect(mainChart.locator('.apexcharts-datalabel')).toHaveCount(0);
+  await page
+    .locator('.view-enter')
+    .screenshot({ path: test.info().outputPath('pension-charts-dark.png') });
+  await page.getByLabel('Income type', { exact: true }).selectOption('self');
+  await expect(
+    page.getByRole('heading', { name: 'Workplace pension: cash now and money for later' }),
+  ).toHaveCount(0);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  expect(errors).toEqual([]);
+});

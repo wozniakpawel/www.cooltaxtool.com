@@ -1910,3 +1910,26 @@ td .form-control[type='number'] {
     gap: 12px;
   }
 }
+
+.explorer-display-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 24px;
+  margin: 20px 0 12px;
+}
+.explorer-breakdown-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.explorer-breakdown-toggle input {
+  accent-color: var(--accent);
+}
+.pension-insights {
+  margin-top: 20px;
+}
+.pension-insights h3 {
+  margin: 12px 0;
+}

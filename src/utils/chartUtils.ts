@@ -36,6 +36,8 @@ export const getApexChartOptions = (
   const { isDark, axisColor, gridColor, textColor } = getChartTheme(theme);
 
   return {
+    // Dense sweeps need hover values, not a label on every sampled point.
+    dataLabels: { enabled: false },
     noData: { text: 'Select a measure to display.' },
     chart: {
       type: 'line' as const,
